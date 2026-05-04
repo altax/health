@@ -3,20 +3,31 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Personal Health System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+    description: Health check
+  - name: profile
+    description: User profile management
+  - name: logs
+    description: Daily log entries
+  - name: food
+    description: Food search and nutrition
+  - name: labs
+    description: Laboratory results
+  - name: measurements
+    description: Body measurements
+  - name: analysis
+    description: Health analysis and insights
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +35,396 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: upsertProfile
+      tags: [profile]
+      summary: Create or update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /logs:
+    get:
+      operationId: getLogs
+      tags: [logs]
+      summary: List daily logs
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: List of daily logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailyLog"
+
+  /logs/{date}:
+    get:
+      operationId: getDailyLog
+      tags: [logs]
+      summary: Get daily log by date
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daily log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyLog"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: patchDailyLog
+      tags: [logs]
+      summary: Patch daily log fields (water, sleep, mood, etc.)
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchDailyLogBody"
+      responses:
+        "200":
+          description: Updated daily log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyLog"
+
+  /logs/{date}/food:
+    post:
+      operationId: addFoodEntry
+      tags: [logs]
+      summary: Add food entry to a daily log
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddFoodEntryBody"
+      responses:
+        "201":
+          description: Food entry added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FoodEntry"
+
+  /logs/{date}/food/{entryId}:
+    delete:
+      operationId: deleteFoodEntry
+      tags: [logs]
+      summary: Delete a food entry from a daily log
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /logs/{date}/activity:
+    post:
+      operationId: addActivityEntry
+      tags: [logs]
+      summary: Add activity entry to a daily log
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddActivityEntryBody"
+      responses:
+        "201":
+          description: Activity entry added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityEntry"
+
+  /logs/{date}/activity/{entryId}:
+    delete:
+      operationId: deleteActivityEntry
+      tags: [logs]
+      summary: Delete an activity entry
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /labs:
+    get:
+      operationId: getLabs
+      tags: [labs]
+      summary: List lab results
+      responses:
+        "200":
+          description: Lab results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LabResult"
+    post:
+      operationId: addLabResult
+      tags: [labs]
+      summary: Add a lab result
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddLabResultBody"
+      responses:
+        "201":
+          description: Lab result created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabResult"
+
+  /labs/{id}:
+    delete:
+      operationId: deleteLabResult
+      tags: [labs]
+      summary: Delete a lab result
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /measurements:
+    get:
+      operationId: getMeasurements
+      tags: [measurements]
+      summary: Get body measurements history
+      responses:
+        "200":
+          description: Measurements list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BodyMeasurement"
+    post:
+      operationId: addMeasurement
+      tags: [measurements]
+      summary: Add a body measurement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddMeasurementBody"
+      responses:
+        "201":
+          description: Measurement added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BodyMeasurement"
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [analysis]
+      summary: Get dashboard summary for today and recent trends
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /analysis/nutrients:
+    get:
+      operationId: getNutrientAnalysis
+      tags: [analysis]
+      summary: Get nutrient status analysis for a period
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1d, 7d, 28d, 90d]
+            default: 7d
+      responses:
+        "200":
+          description: Nutrient analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NutrientAnalysis"
+
+  /analysis/recommendations:
+    get:
+      operationId: getRecommendations
+      tags: [analysis]
+      summary: Get current health recommendations
+      responses:
+        "200":
+          description: Recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recommendation"
+
+  /analysis/weekly-report:
+    get:
+      operationId: getWeeklyReport
+      tags: [analysis]
+      summary: Get weekly health report
+      responses:
+        "200":
+          description: Weekly report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklyReport"
+
+  /foods/search:
+    get:
+      operationId: searchFoods
+      tags: [food]
+      summary: Search foods by name
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Matching foods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FoodItem"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +432,803 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        sex:
+          type: string
+          enum: [male, female, other]
+        age:
+          type: integer
+        height:
+          type: number
+          description: Height in cm
+        weight:
+          type: number
+          description: Weight in kg
+        waistCircumference:
+          type: number
+          nullable: true
+        bodyFatPercent:
+          type: number
+          nullable: true
+        muscleMass:
+          type: number
+          nullable: true
+        restingHeartRate:
+          type: integer
+          nullable: true
+        activityLevel:
+          type: string
+          enum: [sedentary, lightly_active, moderately_active, very_active, extremely_active]
+        workType:
+          type: string
+          nullable: true
+        sleepGoalHours:
+          type: number
+        timezone:
+          type: string
+          nullable: true
+        goals:
+          type: array
+          items:
+            type: string
+        chronicConditions:
+          type: array
+          items:
+            type: string
+        medications:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        dietaryRestrictions:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - sex
+        - age
+        - height
+        - weight
+        - activityLevel
+        - sleepGoalHours
+        - goals
+        - chronicConditions
+        - medications
+        - allergies
+        - dietaryRestrictions
+        - createdAt
+        - updatedAt
+
+    UpsertProfileBody:
+      type: object
+      properties:
+        sex:
+          type: string
+          enum: [male, female, other]
+        age:
+          type: integer
+        height:
+          type: number
+        weight:
+          type: number
+        waistCircumference:
+          type: number
+          nullable: true
+        bodyFatPercent:
+          type: number
+          nullable: true
+        muscleMass:
+          type: number
+          nullable: true
+        restingHeartRate:
+          type: integer
+          nullable: true
+        activityLevel:
+          type: string
+          enum: [sedentary, lightly_active, moderately_active, very_active, extremely_active]
+        workType:
+          type: string
+          nullable: true
+        sleepGoalHours:
+          type: number
+        timezone:
+          type: string
+          nullable: true
+        goals:
+          type: array
+          items:
+            type: string
+        chronicConditions:
+          type: array
+          items:
+            type: string
+        medications:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        dietaryRestrictions:
+          type: array
+          items:
+            type: string
+      required:
+        - sex
+        - age
+        - height
+        - weight
+        - activityLevel
+        - sleepGoalHours
+        - goals
+        - chronicConditions
+        - medications
+        - allergies
+        - dietaryRestrictions
+
+    NutrientData:
+      type: object
+      description: Complete nutrient breakdown of a food portion
+      properties:
+        calories:
+          type: number
+        protein:
+          type: number
+        fat:
+          type: number
+        carbs:
+          type: number
+        fiber:
+          type: number
+        sugar:
+          type: number
+        sodium:
+          type: number
+        potassium:
+          type: number
+        calcium:
+          type: number
+        magnesium:
+          type: number
+        iron:
+          type: number
+        zinc:
+          type: number
+        vitaminA:
+          type: number
+        vitaminC:
+          type: number
+        vitaminD:
+          type: number
+        vitaminE:
+          type: number
+        vitaminK:
+          type: number
+        vitaminB1:
+          type: number
+        vitaminB2:
+          type: number
+        vitaminB3:
+          type: number
+        vitaminB6:
+          type: number
+        vitaminB12:
+          type: number
+        folate:
+          type: number
+        omega3:
+          type: number
+        omega6:
+          type: number
+        saturatedFat:
+          type: number
+        cholesterol:
+          type: number
+      required: [calories, protein, fat, carbs]
+
+    FoodItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          nullable: true
+        servingSize:
+          type: number
+          description: Default serving size in grams
+        nutrients:
+          $ref: "#/components/schemas/NutrientData"
+      required: [id, name, servingSize, nutrients]
+
+    FoodEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        foodId:
+          type: string
+          nullable: true
+        foodName:
+          type: string
+        mealType:
+          type: string
+          enum: [breakfast, lunch, dinner, snack]
+        amount:
+          type: number
+          description: Amount in grams
+        nutrients:
+          $ref: "#/components/schemas/NutrientData"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, date, foodName, mealType, amount, nutrients, createdAt]
+
+    AddFoodEntryBody:
+      type: object
+      properties:
+        foodId:
+          type: string
+          nullable: true
+        foodName:
+          type: string
+        mealType:
+          type: string
+          enum: [breakfast, lunch, dinner, snack]
+        amount:
+          type: number
+        nutrients:
+          $ref: "#/components/schemas/NutrientData"
+      required: [foodName, mealType, amount, nutrients]
+
+    ActivityEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+        category:
+          type: string
+          enum: [cardio, strength, flexibility, sports, other]
+        durationMinutes:
+          type: integer
+        intensity:
+          type: string
+          enum: [light, moderate, vigorous]
+        caloriesBurned:
+          type: number
+          nullable: true
+        steps:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, date, type, category, durationMinutes, intensity, createdAt]
+
+    AddActivityEntryBody:
+      type: object
+      properties:
+        type:
+          type: string
+        category:
+          type: string
+          enum: [cardio, strength, flexibility, sports, other]
+        durationMinutes:
+          type: integer
+        intensity:
+          type: string
+          enum: [light, moderate, vigorous]
+        caloriesBurned:
+          type: number
+          nullable: true
+        steps:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required: [type, category, durationMinutes, intensity]
+
+    SleepData:
+      type: object
+      properties:
+        bedtime:
+          type: string
+          nullable: true
+        wakeTime:
+          type: string
+          nullable: true
+        durationHours:
+          type: number
+          nullable: true
+        qualityScore:
+          type: integer
+          nullable: true
+          description: 1-10 subjective quality
+        wakeUps:
+          type: integer
+          nullable: true
+        morningFeeling:
+          type: string
+          enum: [refreshed, okay, tired, exhausted]
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    WellbeingData:
+      type: object
+      properties:
+        energyLevel:
+          type: integer
+          nullable: true
+          description: 1-10
+        moodScore:
+          type: integer
+          nullable: true
+          description: 1-10
+        focusScore:
+          type: integer
+          nullable: true
+          description: 1-10
+        stressLevel:
+          type: integer
+          nullable: true
+          description: 1-10
+        hungerLevel:
+          type: integer
+          nullable: true
+          description: 1-10
+        symptoms:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+          nullable: true
+
+    DailyLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        waterMl:
+          type: number
+          description: Total water consumed in mL
+        waterGoalMl:
+          type: number
+          nullable: true
+        sleep:
+          $ref: "#/components/schemas/SleepData"
+          nullable: true
+        wellbeing:
+          $ref: "#/components/schemas/WellbeingData"
+          nullable: true
+        foodEntries:
+          type: array
+          items:
+            $ref: "#/components/schemas/FoodEntry"
+        activityEntries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityEntry"
+        totalNutrients:
+          $ref: "#/components/schemas/NutrientData"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, date, waterMl, foodEntries, activityEntries, totalNutrients, createdAt, updatedAt]
+
+    PatchDailyLogBody:
+      type: object
+      properties:
+        waterMl:
+          type: number
+          nullable: true
+        waterGoalMl:
+          type: number
+          nullable: true
+        sleep:
+          $ref: "#/components/schemas/SleepData"
+          nullable: true
+        wellbeing:
+          $ref: "#/components/schemas/WellbeingData"
+          nullable: true
+
+    LabResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        marker:
+          type: string
+          description: Lab marker name (e.g., ferritin, vitamin_d, hemoglobin)
+        value:
+          type: number
+        unit:
+          type: string
+        refMin:
+          type: number
+          nullable: true
+        refMax:
+          type: number
+          nullable: true
+        laboratory:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [normal, low, high, critical_low, critical_high, unknown]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, date, marker, value, unit, status, createdAt]
+
+    AddLabResultBody:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        marker:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        refMin:
+          type: number
+          nullable: true
+        refMax:
+          type: number
+          nullable: true
+        laboratory:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required: [date, marker, value, unit]
+
+    BodyMeasurement:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        weight:
+          type: number
+          nullable: true
+        bodyFatPercent:
+          type: number
+          nullable: true
+        muscleMass:
+          type: number
+          nullable: true
+        waistCm:
+          type: number
+          nullable: true
+        hipCm:
+          type: number
+          nullable: true
+        chestCm:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, date, createdAt]
+
+    AddMeasurementBody:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        weight:
+          type: number
+          nullable: true
+        bodyFatPercent:
+          type: number
+          nullable: true
+        muscleMass:
+          type: number
+          nullable: true
+        waistCm:
+          type: number
+          nullable: true
+        hipCm:
+          type: number
+          nullable: true
+        chestCm:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required: [date]
+
+    NutrientStatus:
+      type: object
+      properties:
+        nutrient:
+          type: string
+        averageIntake:
+          type: number
+        target:
+          type: number
+        unit:
+          type: string
+        percentOfTarget:
+          type: number
+        status:
+          type: string
+          enum: [normal, likely_deficient, possibly_deficient, likely_excess, possibly_excess, insufficient_data, needs_biomarker]
+        confidence:
+          type: string
+          enum: [high, medium, low, very_low]
+        trend:
+          type: string
+          enum: [improving, stable, worsening, insufficient_data]
+        labValue:
+          type: number
+          nullable: true
+        labDate:
+          type: string
+          format: date
+          nullable: true
+      required: [nutrient, averageIntake, target, unit, percentOfTarget, status, confidence, trend]
+
+    NutrientAnalysis:
+      type: object
+      properties:
+        period:
+          type: string
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        nutrients:
+          type: array
+          items:
+            $ref: "#/components/schemas/NutrientStatus"
+        dataQuality:
+          type: string
+          enum: [high, medium, low, insufficient]
+        daysWithData:
+          type: integer
+        totalDays:
+          type: integer
+      required: [period, from, to, nutrients, dataQuality, daysWithData, totalDays]
+
+    DashboardSummary:
+      type: object
+      properties:
+        today:
+          $ref: "#/components/schemas/DailyLog"
+          nullable: true
+        todayTopRisks:
+          type: array
+          items:
+            type: string
+        todayTopStrengths:
+          type: array
+          items:
+            type: string
+        calorieTarget:
+          type: number
+          nullable: true
+        waterTarget:
+          type: number
+          nullable: true
+        sleepTarget:
+          type: number
+          nullable: true
+        weeklyNutrientHighlights:
+          type: array
+          items:
+            $ref: "#/components/schemas/NutrientStatus"
+        recentLabAlerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabResult"
+        bodyTrend:
+          type: object
+          nullable: true
+          properties:
+            currentWeight:
+              type: number
+              nullable: true
+            weightChange7d:
+              type: number
+              nullable: true
+            weightChange28d:
+              type: number
+              nullable: true
+          required: [currentWeight, weightChange7d, weightChange28d]
+        streak:
+          type: object
+          properties:
+            logStreak:
+              type: integer
+            waterStreak:
+              type: integer
+            sleepStreak:
+              type: integer
+          required: [logStreak, waterStreak, sleepStreak]
+        profileSetup:
+          type: boolean
+      required:
+        - todayTopRisks
+        - todayTopStrengths
+        - weeklyNutrientHighlights
+        - recentLabAlerts
+        - streak
+        - profileSetup
+
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: string
+        priority:
+          type: string
+          enum: [safety, deficiency, stabilization, optimization, fine_tuning, long_term]
+        category:
+          type: string
+          enum: [nutrition, hydration, sleep, activity, labs, supplements, lifestyle]
+        title:
+          type: string
+        finding:
+          type: string
+        importance:
+          type: string
+        confidence:
+          type: string
+          enum: [high, medium, low, very_low]
+        actionToday:
+          type: string
+        actionWeek:
+          type: string
+        reviewIn:
+          type: string
+        dataNeeded:
+          type: string
+          nullable: true
+      required:
+        - id
+        - priority
+        - category
+        - title
+        - finding
+        - importance
+        - confidence
+        - actionToday
+        - actionWeek
+        - reviewIn
+
+    WeeklyReport:
+      type: object
+      properties:
+        weekStart:
+          type: string
+          format: date
+        weekEnd:
+          type: string
+          format: date
+        averageCalories:
+          type: number
+        averageProtein:
+          type: number
+        averageWaterMl:
+          type: number
+        averageSleepHours:
+          type: number
+        averageEnergyScore:
+          type: number
+          nullable: true
+        averageMoodScore:
+          type: number
+          nullable: true
+        totalActivityMinutes:
+          type: integer
+        nutrientHighlights:
+          type: array
+          items:
+            $ref: "#/components/schemas/NutrientStatus"
+        recurringIssues:
+          type: array
+          items:
+            type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        daysLogged:
+          type: integer
+        comparedToPreviousWeek:
+          type: object
+          nullable: true
+          properties:
+            caloriesChange:
+              type: number
+            sleepChange:
+              type: number
+            waterChange:
+              type: number
+          required: [caloriesChange, sleepChange, waterChange]
+      required:
+        - weekStart
+        - weekEnd
+        - averageCalories
+        - averageProtein
+        - averageWaterMl
+        - averageSleepHours
+        - totalActivityMinutes
+        - nutrientHighlights
+        - recurringIssues
+        - strengths
+        - daysLogged
