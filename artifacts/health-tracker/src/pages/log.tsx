@@ -9,6 +9,7 @@ import {
   useDeleteActivityEntry,
   useSearchFoods,
   getGetDailyLogQueryKey,
+  getSearchFoodsQueryKey,
 } from "@workspace/api-client-react";
 import type {
   AddFoodEntryBody,
@@ -79,7 +80,7 @@ export default function LogPage() {
 
   const { data: foodResults } = useSearchFoods(
     { q: foodQuery },
-    { query: { enabled: foodQuery.length >= 2 } }
+    { query: { queryKey: getSearchFoodsQueryKey({ q: foodQuery }), enabled: foodQuery.length >= 2 } }
   );
 
   const [actType, setActType] = useState("");
@@ -107,14 +108,14 @@ export default function LogPage() {
     const ml = parseFloat(waterInput);
     if (isNaN(ml) || ml <= 0) return;
     const current = log?.waterMl ?? 0;
-    await patchLog.mutateAsync([date, { waterMl: current + ml }]);
+    await patchLog.mutateAsync({ date, data: { waterMl: current + ml } });
     setWaterInput("");
     invalidate();
   }
 
   async function handleQuickWater(ml: number) {
     const current = log?.waterMl ?? 0;
-    await patchLog.mutateAsync([date, { waterMl: current + ml }]);
+    await patchLog.mutateAsync({ date, data: { waterMl: current + ml } });
     invalidate();
   }
 
@@ -140,7 +141,7 @@ export default function LogPage() {
       folate: Math.round(((n.folate ?? 0) * scale) * 10) / 10,
       omega3: Math.round(((n.omega3 ?? 0) * scale) * 100) / 100,
     };
-    await addFood.mutateAsync([date, { foodId: selectedFood?.id ?? null, foodName: name, mealType, amount, nutrients: scaled }]);
+    await addFood.mutateAsync({ date, data: { foodId: selectedFood?.id ?? null, foodName: name, mealType, amount, nutrients: scaled } });
     setSelectedFood(null);
     setFoodQuery("");
     setManualFood("");
@@ -149,7 +150,7 @@ export default function LogPage() {
   }
 
   async function handleDeleteFood(entryId: number) {
-    await deleteFood.mutateAsync([date, entryId]);
+    await deleteFood.mutateAsync({ date, entryId });
     invalidate();
   }
 
@@ -163,7 +164,7 @@ export default function LogPage() {
       caloriesBurned: actCalories ? parseFloat(actCalories) : null,
       steps: actSteps ? parseInt(actSteps, 10) : null,
     };
-    await addActivity.mutateAsync([date, body]);
+    await addActivity.mutateAsync({ date, data: body });
     setActType("");
     setActCalories("");
     setActSteps("");
@@ -171,7 +172,7 @@ export default function LogPage() {
   }
 
   async function handleDeleteActivity(entryId: number) {
-    await deleteActivity.mutateAsync([date, entryId]);
+    await deleteActivity.mutateAsync({ date, entryId });
     invalidate();
   }
 
@@ -184,19 +185,19 @@ export default function LogPage() {
         qualityScore: sleepQuality,
       },
     };
-    await patchLog.mutateAsync([date, patch]);
+    await patchLog.mutateAsync({ date, data: patch });
     invalidate();
   }
 
   async function handleSaveWellbeing() {
-    await patchLog.mutateAsync([date, {
+    await patchLog.mutateAsync({ date, data: {
       wellbeing: {
         energyLevel: energy,
         moodScore: mood,
         focusScore: focus,
         stressLevel: stress,
       },
-    }]);
+    } });
     invalidate();
   }
 

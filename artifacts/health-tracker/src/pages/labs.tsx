@@ -69,7 +69,7 @@ export default function LabsPage() {
   async function handleAdd() {
     const finalMarker = marker === "__custom__" ? customMarker : marker;
     if (!finalMarker || !value || !unit) return;
-    await addLab.mutateAsync([{
+    await addLab.mutateAsync({ data: {
       date,
       marker: finalMarker,
       value: parseFloat(value),
@@ -78,14 +78,14 @@ export default function LabsPage() {
       refMax: refMax ? parseFloat(refMax) : null,
       laboratory: lab || null,
       notes: notes || null,
-    }]);
+    } });
     setOpen(false);
     setMarker(""); setCustomMarker(""); setValue(""); setUnit(""); setRefMin(""); setRefMax(""); setLab(""); setNotes("");
     invalidate();
   }
 
   async function handleDelete(id: number) {
-    await deleteLab.mutateAsync([id]);
+    await deleteLab.mutateAsync({ id });
     invalidate();
   }
 

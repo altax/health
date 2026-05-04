@@ -118,7 +118,7 @@ export default function ProfilePage() {
   }
 
   async function handleSave() {
-    await upsert.mutateAsync([form]);
+    await upsert.mutateAsync({ data: form });
     qc.invalidateQueries({ queryKey: getGetProfileQueryKey() });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

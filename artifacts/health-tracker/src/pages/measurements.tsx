@@ -29,7 +29,7 @@ export default function MeasurementsPage() {
   }
 
   async function handleAdd() {
-    await addMeasurement.mutateAsync([{
+    await addMeasurement.mutateAsync({ data: {
       date,
       weight: weight ? parseFloat(weight) : null,
       bodyFatPercent: bodyFat ? parseFloat(bodyFat) : null,
@@ -37,7 +37,7 @@ export default function MeasurementsPage() {
       waistCm: waist ? parseFloat(waist) : null,
       hipCm: hip ? parseFloat(hip) : null,
       notes: notes || null,
-    }]);
+    } });
     setOpen(false);
     setWeight(""); setBodyFat(""); setMuscle(""); setWaist(""); setHip(""); setNotes("");
     invalidate();
