@@ -10,12 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 
 const GOAL_OPTIONS = [
-  "Weight loss", "Muscle gain", "Better energy", "Improve sleep", "Improve concentration",
-  "Better recovery", "Optimize nutrition", "Lab improvement", "Reduce stress", "General health",
+  "Снижение веса", "Набор мышечной массы", "Больше энергии", "Улучшить сон",
+  "Улучшить концентрацию", "Ускорить восстановление", "Оптимизировать питание",
+  "Улучшить показатели анализов", "Снизить стресс", "Общее здоровье",
 ];
 
 const RESTRICTION_OPTIONS = [
-  "Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Nut-free", "Halal", "Kosher", "Low-carb", "Keto",
+  "Вегетарианство", "Веганство", "Без глютена", "Без лактозы", "Без орехов",
+  "Халяль", "Кошерное", "Низкоуглеводное", "Кето",
 ];
 
 function TagInput({ values, options, onChange, placeholder }: {
@@ -42,7 +44,7 @@ function TagInput({ values, options, onChange, placeholder }: {
           placeholder={placeholder}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(input); } }}
         />
-        <Button type="button" variant="outline" size="sm" onClick={() => add(input)}>Add</Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => add(input)}>Добавить</Button>
       </div>
       {options && (
         <div className="flex flex-wrap gap-1">
@@ -126,130 +128,130 @@ export default function ProfilePage() {
     <div className="space-y-6 animate-in fade-in duration-300 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Health Profile</h1>
-          <p className="text-muted-foreground text-sm">Your biometric baseline — enables personalized targets</p>
+          <h1 className="text-2xl font-bold tracking-tight">Профиль здоровья</h1>
+          <p className="text-muted-foreground text-sm">Ваши биометрические данные — основа для персонального анализа</p>
         </div>
         <User className="h-8 w-8 text-muted-foreground" />
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Demographics</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Основные данные</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Sex at birth</label>
+            <label className="text-sm text-muted-foreground">Пол</label>
             <Select value={form.sex} onValueChange={(v) => set("sex", v as UpsertProfileBody["sex"])}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="male">Мужской</SelectItem>
+                <SelectItem value="female">Женский</SelectItem>
+                <SelectItem value="other">Другой</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Age</label>
+            <label className="text-sm text-muted-foreground">Возраст</label>
             <Input type="number" value={form.age} onChange={(e) => set("age", Number(e.target.value))} min={10} max={120} />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Height (cm)</label>
+            <label className="text-sm text-muted-foreground">Рост (см)</label>
             <Input type="number" value={form.height} onChange={(e) => set("height", Number(e.target.value))} />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Weight (kg)</label>
+            <label className="text-sm text-muted-foreground">Вес (кг)</label>
             <Input type="number" step="0.1" value={form.weight} onChange={(e) => set("weight", Number(e.target.value))} />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Waist (cm)</label>
-            <Input type="number" step="0.1" placeholder="optional" value={form.waistCircumference ?? ""} onChange={(e) => set("waistCircumference", e.target.value ? Number(e.target.value) : undefined)} />
+            <label className="text-sm text-muted-foreground">Талия (см)</label>
+            <Input type="number" step="0.1" placeholder="необязательно" value={form.waistCircumference ?? ""} onChange={(e) => set("waistCircumference", e.target.value ? Number(e.target.value) : undefined)} />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Body fat %</label>
-            <Input type="number" step="0.1" placeholder="optional" value={form.bodyFatPercent ?? ""} onChange={(e) => set("bodyFatPercent", e.target.value ? Number(e.target.value) : undefined)} />
+            <label className="text-sm text-muted-foreground">Жир (%)</label>
+            <Input type="number" step="0.1" placeholder="необязательно" value={form.bodyFatPercent ?? ""} onChange={(e) => set("bodyFatPercent", e.target.value ? Number(e.target.value) : undefined)} />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Muscle mass (kg)</label>
-            <Input type="number" step="0.1" placeholder="optional" value={form.muscleMass ?? ""} onChange={(e) => set("muscleMass", e.target.value ? Number(e.target.value) : undefined)} />
+            <label className="text-sm text-muted-foreground">Мышечная масса (кг)</label>
+            <Input type="number" step="0.1" placeholder="необязательно" value={form.muscleMass ?? ""} onChange={(e) => set("muscleMass", e.target.value ? Number(e.target.value) : undefined)} />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Resting heart rate (bpm)</label>
-            <Input type="number" placeholder="optional" value={form.restingHeartRate ?? ""} onChange={(e) => set("restingHeartRate", e.target.value ? Number(e.target.value) : undefined)} />
+            <label className="text-sm text-muted-foreground">Пульс в покое (уд/мин)</label>
+            <Input type="number" placeholder="необязательно" value={form.restingHeartRate ?? ""} onChange={(e) => set("restingHeartRate", e.target.value ? Number(e.target.value) : undefined)} />
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Lifestyle</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Образ жизни</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-sm text-muted-foreground">Activity level</label>
+              <label className="text-sm text-muted-foreground">Уровень активности</label>
               <Select value={form.activityLevel} onValueChange={(v) => set("activityLevel", v as UpsertProfileBody["activityLevel"])}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sedentary">Sedentary (desk job, no exercise)</SelectItem>
-                  <SelectItem value="lightly_active">Lightly active (1-3 days/week)</SelectItem>
-                  <SelectItem value="moderately_active">Moderately active (3-5 days/week)</SelectItem>
-                  <SelectItem value="very_active">Very active (6-7 days/week)</SelectItem>
-                  <SelectItem value="extremely_active">Extremely active (athlete/physical job)</SelectItem>
+                  <SelectItem value="sedentary">Сидячий (офис, без спорта)</SelectItem>
+                  <SelectItem value="lightly_active">Слабоактивный (1-3 дня/нед.)</SelectItem>
+                  <SelectItem value="moderately_active">Умеренно активный (3-5 дней/нед.)</SelectItem>
+                  <SelectItem value="very_active">Высокоактивный (6-7 дней/нед.)</SelectItem>
+                  <SelectItem value="extremely_active">Очень активный (спортсмен/физ. труд)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm text-muted-foreground">Sleep goal (hours)</label>
+              <label className="text-sm text-muted-foreground">Цель по сну (ч)</label>
               <Input type="number" step="0.25" min={4} max={12} value={form.sleepGoalHours} onChange={(e) => set("sleepGoalHours", Number(e.target.value))} />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Work type</label>
-            <Input placeholder="e.g. office, physical, shift work" value={form.workType ?? ""} onChange={(e) => set("workType", e.target.value || undefined)} />
+            <label className="text-sm text-muted-foreground">Тип работы</label>
+            <Input placeholder="офисная, физическая, сменная..." value={form.workType ?? ""} onChange={(e) => set("workType", e.target.value || undefined)} />
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Goals</CardTitle>
-          <CardDescription>What are you optimizing for?</CardDescription>
+          <CardTitle className="text-base">Цели</CardTitle>
+          <CardDescription>Что вы хотите оптимизировать?</CardDescription>
         </CardHeader>
         <CardContent>
           <TagInput
             values={form.goals}
             options={GOAL_OPTIONS}
             onChange={(v) => set("goals", v)}
-            placeholder="Type a goal and press Enter"
+            placeholder="Введите цель и нажмите Enter"
           />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Medical Context</CardTitle>
-          <CardDescription>Used only to personalize recommendations — not shared</CardDescription>
+          <CardTitle className="text-base">Медицинский контекст</CardTitle>
+          <CardDescription>Используется только для персонализации — не передаётся третьим лицам</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground font-medium">Chronic conditions</label>
-            <TagInput values={form.chronicConditions} onChange={(v) => set("chronicConditions", v)} placeholder="e.g. hypothyroidism, IBS" />
+            <label className="text-sm text-muted-foreground font-medium">Хронические заболевания</label>
+            <TagInput values={form.chronicConditions} onChange={(v) => set("chronicConditions", v)} placeholder="гипотиреоз, СРК..." />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground font-medium">Current medications</label>
-            <TagInput values={form.medications} onChange={(v) => set("medications", v)} placeholder="e.g. metformin, levothyroxine" />
+            <label className="text-sm text-muted-foreground font-medium">Принимаемые препараты</label>
+            <TagInput values={form.medications} onChange={(v) => set("medications", v)} placeholder="метформин, левотироксин..." />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground font-medium">Allergies</label>
-            <TagInput values={form.allergies} onChange={(v) => set("allergies", v)} placeholder="e.g. peanuts, shellfish" />
+            <label className="text-sm text-muted-foreground font-medium">Аллергии</label>
+            <TagInput values={form.allergies} onChange={(v) => set("allergies", v)} placeholder="арахис, морепродукты..." />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground font-medium">Dietary restrictions</label>
-            <TagInput values={form.dietaryRestrictions} options={RESTRICTION_OPTIONS} onChange={(v) => set("dietaryRestrictions", v)} placeholder="e.g. vegetarian" />
+            <label className="text-sm text-muted-foreground font-medium">Диетические ограничения</label>
+            <TagInput values={form.dietaryRestrictions} options={RESTRICTION_OPTIONS} onChange={(v) => set("dietaryRestrictions", v)} placeholder="вегетарианство..." />
           </div>
         </CardContent>
       </Card>
 
       <Button onClick={handleSave} disabled={upsert.isPending} className="w-full" size="lg">
         {saved ? (
-          <><CheckCircle2 className="h-4 w-4 mr-2" />Profile saved</>
-        ) : "Save Profile"}
+          <><CheckCircle2 className="h-4 w-4 mr-2" />Профиль сохранён</>
+        ) : "Сохранить профиль"}
       </Button>
     </div>
   );

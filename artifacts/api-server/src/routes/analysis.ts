@@ -195,14 +195,14 @@ router.get("/analysis/recommendations", async (req, res) => {
       id: "setup_profile",
       priority: "safety",
       category: "lifestyle",
-      title: "Complete your health profile",
-      finding: "No profile data found. Without it, personalized nutrient targets, calorie goals, and hydration ranges cannot be calculated.",
-      importance: "Personalized targets require your age, sex, weight, height, and activity level.",
+      title: "Заполните профиль здоровья",
+      finding: "Данные профиля не найдены. Без них невозможно рассчитать персональные нормы нутриентов, целевые калории и объём воды.",
+      importance: "Для персонализированного анализа необходимы возраст, пол, вес, рост и уровень активности.",
       confidence: "high",
-      actionToday: "Fill in your profile: go to Profile and enter your demographics and goals.",
-      actionWeek: "Add your medical context: any chronic conditions, medications, or dietary restrictions.",
-      reviewIn: "Immediately — needed to generate all other recommendations.",
-      dataNeeded: "Age, sex, height, weight, activity level, goals.",
+      actionToday: "Перейдите в раздел «Профиль» и заполните демографические данные и цели.",
+      actionWeek: "Добавьте медицинский контекст: хронические заболевания, принимаемые препараты, ограничения в питании.",
+      reviewIn: "Немедленно — необходимо для генерации всех остальных рекомендаций.",
+      dataNeeded: "Возраст, пол, рост, вес, уровень активности, цели.",
     });
   }
 
@@ -212,13 +212,13 @@ router.get("/analysis/recommendations", async (req, res) => {
       id: "log_consistency",
       priority: "stabilization",
       category: "nutrition",
-      title: "Log your food consistently",
-      finding: `Only ${recentLogs.length} log day(s) in the past 7 days. Nutrient analysis requires consistent data.`,
-      importance: "Trend analysis needs at least 7 days of data to generate meaningful insights.",
+      title: "Ведите дневник питания регулярно",
+      finding: `За последние 7 дней заполнено только ${recentLogs.length} дн. дневника. Анализ нутриентов требует стабильных данных.`,
+      importance: "Для выявления трендов необходимо минимум 7 дней записей.",
       confidence: "high",
-      actionToday: "Log everything you eat today — even rough estimates are better than nothing.",
-      actionWeek: "Aim for 7 consecutive log days to unlock nutrient trend analysis.",
-      reviewIn: "1 week",
+      actionToday: "Запишите всё, что едите сегодня — даже приблизительные данные лучше, чем ничего.",
+      actionWeek: "Стремитесь к 7 подряд дням записей, чтобы разблокировать анализ трендов нутриентов.",
+      reviewIn: "1 неделя",
       dataNeeded: null,
     });
   }
@@ -242,13 +242,13 @@ router.get("/analysis/recommendations", async (req, res) => {
         id: "protein_low",
         priority: "deficiency",
         category: "nutrition",
-        title: "Protein intake is below target",
-        finding: `Average protein: ${Math.round(avgProtein)}g/day vs target ${Math.round(proteinTarget)}g (1.6g/kg body weight).`,
-        importance: "Adequate protein supports muscle maintenance, satiety, and recovery. Chronic shortfall leads to muscle loss.",
+        title: "Потребление белка ниже нормы",
+        finding: `Среднее потребление белка: ${Math.round(avgProtein)} г/день, цель — ${Math.round(proteinTarget)} г (1,6 г/кг массы тела).`,
+        importance: "Достаточный белок поддерживает мышечную массу, насыщение и восстановление. Хронический дефицит ведёт к потере мышц.",
         confidence: daysLogged >= 3 ? "medium" : "low",
-        actionToday: `Add a high-protein food to your next meal: chicken breast, Greek yogurt, eggs, or legumes.`,
-        actionWeek: "Plan at least 2 protein sources per main meal. Target 25-40g protein per meal.",
-        reviewIn: "2 weeks",
+        actionToday: "Добавьте высокобелковый продукт в следующий приём пищи: куриная грудка, греческий йогурт, яйца или бобовые.",
+        actionWeek: "Планируйте минимум 2 источника белка на каждый основной приём пищи. Цель — 25–40 г белка на приём.",
+        reviewIn: "2 недели",
         dataNeeded: null,
       });
     }
@@ -261,14 +261,14 @@ router.get("/analysis/recommendations", async (req, res) => {
         id: "calories_low",
         priority: "stabilization",
         category: "nutrition",
-        title: "Calorie intake may be below maintenance",
-        finding: `Average ${Math.round(avgCalories)} kcal/day vs estimated maintenance ${calorieTarget} kcal.`,
-        importance: "Sustained calorie deficit can reduce metabolic rate, impair recovery, and cause muscle loss.",
+        title: "Калорийность рациона может быть ниже поддерживающей",
+        finding: `В среднем ${Math.round(avgCalories)} ккал/день при расчётном поддерживающем значении ${calorieTarget} ккал.`,
+        importance: "Длительный дефицит калорий снижает метаболизм, нарушает восстановление и ведёт к потере мышечной массы.",
         confidence: daysLogged >= 3 ? "medium" : "low",
-        actionToday: "Add a nutrient-dense meal or snack: nuts, avocado, whole grains.",
-        actionWeek: "Check if calorie deficit is intentional (weight loss goal). If not, increase food volume.",
-        reviewIn: "4 weeks — monitor weight trend.",
-        dataNeeded: "Confirm intentional calorie restriction or not.",
+        actionToday: "Добавьте нутриентно-плотный приём пищи или перекус: орехи, авокадо, цельнозерновые продукты.",
+        actionWeek: "Убедитесь, что дефицит калорий намеренный (цель — снижение веса). Если нет — увеличьте объём пищи.",
+        reviewIn: "4 недели — следите за динамикой веса.",
+        dataNeeded: "Уточните: дефицит калорий намеренный или нет.",
       });
     }
   }
@@ -289,13 +289,13 @@ router.get("/analysis/recommendations", async (req, res) => {
         id: "sleep_deficit",
         priority: "stabilization",
         category: "sleep",
-        title: "Sleep duration is below recommended minimum",
-        finding: `Average ${avgSleep.toFixed(1)}h sleep vs CDC recommendation of ≥7h for adults.`,
-        importance: "Chronic sleep debt impairs glucose metabolism, appetite hormones (leptin/ghrelin), cognition, and recovery.",
+        title: "Продолжительность сна ниже рекомендуемого минимума",
+        finding: `Средний сон: ${avgSleep.toFixed(1)} ч при рекомендации ВОЗ ≥7 ч для взрослых.`,
+        importance: "Хронический недосып нарушает метаболизм глюкозы, гормоны аппетита (лептин/грелин), когнитивные функции и восстановление.",
         confidence: logsWithSleep.length >= 5 ? "medium" : "low",
-        actionToday: "Set a fixed bedtime tonight and protect it. Aim for 7-9h.",
-        actionWeek: "Track sleep for 7 days. Note what factors correlate with shorter sleep.",
-        reviewIn: "2 weeks",
+        actionToday: "Установите фиксированное время отхода ко сну сегодня. Цель — 7–9 ч.",
+        actionWeek: "Отслеживайте сон 7 дней. Замечайте, что коррелирует с более коротким сном.",
+        reviewIn: "2 недели",
         dataNeeded: null,
       });
     }
@@ -304,14 +304,14 @@ router.get("/analysis/recommendations", async (req, res) => {
       id: "track_sleep",
       priority: "optimization",
       category: "sleep",
-      title: "Start tracking your sleep",
-      finding: "Sleep data is missing. Sleep quality is one of the highest-impact levers for energy, cognition, and recovery.",
-      importance: "Sleep affects hunger, focus, immune function, and metabolic health more than almost any other single factor.",
+      title: "Начните отслеживать сон",
+      finding: "Данные о сне отсутствуют. Качество сна — один из самых значимых факторов для энергии, когниции и восстановления.",
+      importance: "Сон влияет на чувство голода, концентрацию, иммунитет и метаболизм сильнее, чем почти любой другой фактор.",
       confidence: "high",
-      actionToday: "Log today's sleep in the daily log: bedtime, wake time, subjective quality.",
-      actionWeek: "Log sleep every day for 7 days to enable trend analysis.",
-      reviewIn: "1 week",
-      dataNeeded: "Bedtime, wake time, quality score (1-10).",
+      actionToday: "Запишите сегодняшний сон в дневник: время отхода ко сну, время пробуждения, субъективное качество.",
+      actionWeek: "Записывайте сон каждый день 7 дней, чтобы включить анализ трендов.",
+      reviewIn: "1 неделя",
+      dataNeeded: "Время засыпания, время пробуждения, оценка качества (1–10).",
     });
   }
 
@@ -319,18 +319,21 @@ router.get("/analysis/recommendations", async (req, res) => {
   const abnormalLabs = labs.filter((l) => l.status !== "normal" && l.status !== "unknown");
   if (abnormalLabs.length > 0) {
     const top = abnormalLabs[0];
+    const statusMap: Record<string, string> = {
+      low: "низкий", high: "высокий", critical_low: "критически низкий", critical_high: "критически высокий",
+    };
     recs.push({
       id: `lab_${top.marker}`,
       priority: "safety",
       category: "labs",
-      title: `Abnormal lab result: ${top.marker.replace(/_/g, " ")}`,
-      finding: `${top.marker}: ${top.value} ${top.unit} — status: ${top.status}. Reference: ${top.refMin ?? "?"} – ${top.refMax ?? "?"} ${top.unit}.`,
-      importance: "Out-of-range biomarkers require context and possibly medical evaluation.",
+      title: `Отклонение в анализах: ${top.marker.replace(/_/g, " ")}`,
+      finding: `${top.marker}: ${top.value} ${top.unit} — статус: ${statusMap[top.status] ?? top.status}. Референс: ${top.refMin ?? "?"} – ${top.refMax ?? "?"} ${top.unit}.`,
+      importance: "Отклонения биомаркеров требуют контекста и возможно консультации врача.",
       confidence: "high",
-      actionToday: "Review this result with your healthcare provider if not already done.",
-      actionWeek: "Assess dietary factors that may contribute. Track for retesting.",
-      reviewIn: "As recommended by your physician.",
-      dataNeeded: "Physician interpretation and possible retest date.",
+      actionToday: "Обсудите этот результат с лечащим врачом, если ещё не сделали.",
+      actionWeek: "Оцените диетические факторы, которые могут влиять. Запланируйте повторную сдачу.",
+      reviewIn: "По рекомендации врача.",
+      dataNeeded: "Интерпретация врача и возможная дата повторного анализа.",
     });
   }
 
@@ -345,14 +348,14 @@ router.get("/analysis/recommendations", async (req, res) => {
       id: "check_vitamin_d",
       priority: "optimization",
       category: "labs",
-      title: "Consider testing Vitamin D (25(OH)D)",
-      finding: "No Vitamin D lab result on record. Deficiency is very common (>40% of adults) and often asymptomatic.",
-      importance: "Vitamin D supports bone health, immune function, mood, and muscle function. Dietary intake rarely meets needs.",
+      title: "Рекомендуется проверить витамин D (25(OH)D)",
+      finding: "Результат анализа на витамин D отсутствует. Дефицит крайне распространён (>40% взрослых) и часто протекает бессимптомно.",
+      importance: "Витамин D поддерживает здоровье костей, иммунитет, настроение и функцию мышц. Только из пищи потребность редко покрывается.",
       confidence: "medium",
-      actionToday: "Assess your sun exposure — if minimal, discuss testing with your doctor.",
-      actionWeek: "Request 25(OH)D test at next lab draw.",
-      reviewIn: "After test result.",
-      dataNeeded: "25(OH)D serum level.",
+      actionToday: "Оцените, сколько времени вы проводите на солнце. При минимальном солнечном воздействии — обсудите тест с врачом.",
+      actionWeek: "Запросите анализ 25(OH)D при следующем визите в лабораторию.",
+      reviewIn: "После получения результата.",
+      dataNeeded: "Уровень 25(OH)D в сыворотке крови.",
     });
   }
 
@@ -454,16 +457,16 @@ router.get("/analysis/weekly-report", async (req, res) => {
   const strengths: string[] = [];
   const recurringIssues: string[] = [];
 
-  if (avgProtein >= 100) strengths.push("Strong protein intake this week");
-  if (avgSleepHours >= 7) strengths.push("Sleep duration meets minimum recommendation");
-  if (avgWater >= 1500) strengths.push("Hydration levels are adequate");
-  if (totalActivityMinutes >= 150) strengths.push("Physical activity meets WHO weekly recommendation (150+ min)");
-  if (daysLogged >= 5) strengths.push("Consistent daily logging — good data foundation");
+  if (avgProtein >= 100) strengths.push("Высокое потребление белка на этой неделе");
+  if (avgSleepHours >= 7) strengths.push("Продолжительность сна соответствует норме");
+  if (avgWater >= 1500) strengths.push("Гидратация в пределах нормы");
+  if (totalActivityMinutes >= 150) strengths.push("Физическая активность соответствует рекомендациям ВОЗ (150+ мин)");
+  if (daysLogged >= 5) strengths.push("Стабильное ведение дневника — хорошая база данных");
 
-  if (avgProtein < 80 && days.length > 0) recurringIssues.push("Low protein intake on multiple days");
-  if (avgSleepHours > 0 && avgSleepHours < 7) recurringIssues.push("Persistent sleep duration below 7h");
-  if (avgWater < 1000 && logs.length > 0) recurringIssues.push("Low daily water intake");
-  if (totalActivityMinutes < 75 && activities.length > 0) recurringIssues.push("Physical activity below recommended levels");
+  if (avgProtein < 80 && days.length > 0) recurringIssues.push("Низкое потребление белка в нескольких днях");
+  if (avgSleepHours > 0 && avgSleepHours < 7) recurringIssues.push("Сон систематически менее 7 часов");
+  if (avgWater < 1000 && logs.length > 0) recurringIssues.push("Недостаточное ежедневное потребление воды");
+  if (totalActivityMinutes < 75 && activities.length > 0) recurringIssues.push("Физическая активность ниже рекомендуемого уровня");
 
   return res.json({
     weekStart,
@@ -571,13 +574,13 @@ router.get("/dashboard", async (req, res) => {
   const todayTopRisks: string[] = [];
   const todayTopStrengths: string[] = [];
 
-  if (todayFoods.length === 0) todayTopRisks.push("No food logged today yet");
-  if (!todayLog || todayLog.waterMl < 500) todayTopRisks.push("Low water intake today");
-  if (!profile) todayTopRisks.push("Health profile not set up — personalization is disabled");
+  if (todayFoods.length === 0) todayTopRisks.push("Питание сегодня ещё не записано");
+  if (!todayLog || todayLog.waterMl < 500) todayTopRisks.push("Мало воды выпито сегодня");
+  if (!profile) todayTopRisks.push("Профиль не заполнен — персонализация отключена");
 
-  if (todayNutrients.protein && todayNutrients.protein > 60) todayTopStrengths.push("Good protein intake today");
-  if (todayLog && todayLog.waterMl >= 1500) todayTopStrengths.push("Good hydration today");
-  if (todayActivities.length > 0) todayTopStrengths.push("Physical activity logged today");
+  if (todayNutrients.protein && todayNutrients.protein > 60) todayTopStrengths.push("Хорошее потребление белка сегодня");
+  if (todayLog && todayLog.waterMl >= 1500) todayTopStrengths.push("Хорошая гидратация сегодня");
+  if (todayActivities.length > 0) todayTopStrengths.push("Физическая активность отмечена");
 
   // Weekly nutrient highlights
   const recentFoods = await db

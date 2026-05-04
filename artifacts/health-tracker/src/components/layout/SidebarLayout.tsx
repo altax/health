@@ -4,14 +4,10 @@ import {
   Activity, 
   BarChart3, 
   Calendar, 
-  ChevronRight, 
   ClipboardList, 
   Droplet, 
   Home, 
-  LogOut, 
   Menu, 
-  Moon, 
-  Settings, 
   ShieldCheck, 
   TestTubes,
   User
@@ -21,14 +17,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const sidebarNav = [
-  { title: "Dashboard", href: "/", icon: Home },
-  { title: "Daily Log", href: "/log", icon: ClipboardList },
-  { title: "Recommendations", href: "/recommendations", icon: ShieldCheck },
-  { title: "Nutrients", href: "/nutrients", icon: Droplet },
-  { title: "Lab Results", href: "/labs", icon: TestTubes },
-  { title: "Measurements", href: "/measurements", icon: Activity },
-  { title: "Weekly Report", href: "/weekly", icon: BarChart3 },
-  { title: "History", href: "/history", icon: Calendar },
+  { title: "Обзор", href: "/", icon: Home },
+  { title: "Дневник", href: "/log", icon: ClipboardList },
+  { title: "Рекомендации", href: "/recommendations", icon: ShieldCheck },
+  { title: "Нутриенты", href: "/nutrients", icon: Droplet },
+  { title: "Анализы", href: "/labs", icon: TestTubes },
+  { title: "Замеры", href: "/measurements", icon: Activity },
+  { title: "Недельный отчёт", href: "/weekly", icon: BarChart3 },
+  { title: "История", href: "/history", icon: Calendar },
 ];
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
@@ -39,7 +35,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
     <>
       <div className="py-4">
         <h2 className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Biometrics
+          Биометрика
         </h2>
         <div className="space-y-1 px-2">
           {sidebarNav.map((item) => (
@@ -65,7 +61,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
               onClick={() => setMobileMenuOpen(false)}
             >
               <User className="h-4 w-4" />
-              Profile Settings
+              Профиль
             </Button>
           </Link>
         </div>
@@ -75,19 +71,18 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      {/* Mobile header */}
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 md:hidden">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle menu</span>
+              <span className="sr-only">Меню</span>
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
             <div className="flex h-14 items-center border-b px-4 font-mono font-bold text-primary">
               <Activity className="mr-2 h-5 w-5" />
-              PHS System
+              ЛичноеЗдоровье
             </div>
             <ScrollArea className="h-[calc(100vh-3.5rem)] flex flex-col">
               <NavLinks />
@@ -95,23 +90,21 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
           </SheetContent>
         </Sheet>
         <div className="flex font-mono font-bold text-primary">
-          PHS System
+          ЛичноеЗдоровье
         </div>
       </header>
 
       <div className="flex flex-1">
-        {/* Desktop sidebar */}
         <aside className="hidden w-64 flex-col border-r bg-sidebar md:flex">
           <div className="flex h-14 items-center border-b px-4 font-mono font-bold text-primary">
             <Activity className="mr-2 h-5 w-5" />
-            PHS System
+            ЛичноеЗдоровье
           </div>
           <ScrollArea className="flex-1 flex flex-col">
             <NavLinks />
           </ScrollArea>
         </aside>
 
-        {/* Main content */}
         <main className="flex-1">
           <div className="h-full container max-w-6xl py-6 px-4 md:px-8">
             {children}

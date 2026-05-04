@@ -12,37 +12,37 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const COMMON_MARKERS = [
-  { value: "ferritin", label: "Ferritin" },
-  { value: "hemoglobin", label: "Hemoglobin" },
-  { value: "serum_iron", label: "Serum Iron" },
-  { value: "vitamin_d", label: "Vitamin D (25-OH)" },
-  { value: "vitamin_b12", label: "Vitamin B12" },
-  { value: "folate", label: "Folate" },
-  { value: "glucose_fasting", label: "Glucose (Fasting)" },
+  { value: "ferritin", label: "Ферритин" },
+  { value: "hemoglobin", label: "Гемоглобин" },
+  { value: "serum_iron", label: "Сывороточное железо" },
+  { value: "vitamin_d", label: "Витамин D (25-OH)" },
+  { value: "vitamin_b12", label: "Витамин B12" },
+  { value: "folate", label: "Фолат" },
+  { value: "glucose_fasting", label: "Глюкоза натощак" },
   { value: "hba1c", label: "HbA1c" },
-  { value: "total_cholesterol", label: "Total Cholesterol" },
-  { value: "ldl", label: "LDL Cholesterol" },
-  { value: "hdl", label: "HDL Cholesterol" },
-  { value: "triglycerides", label: "Triglycerides" },
-  { value: "tsh", label: "TSH" },
-  { value: "free_t4", label: "Free T4" },
-  { value: "creatinine", label: "Creatinine" },
-  { value: "alt", label: "ALT" },
-  { value: "ast", label: "AST" },
-  { value: "crp", label: "CRP" },
-  { value: "uric_acid", label: "Uric Acid" },
-  { value: "sodium", label: "Sodium" },
-  { value: "potassium", label: "Potassium" },
-  { value: "magnesium", label: "Magnesium" },
+  { value: "total_cholesterol", label: "Общий холестерин" },
+  { value: "ldl", label: "ЛПНП (LDL)" },
+  { value: "hdl", label: "ЛПВП (HDL)" },
+  { value: "triglycerides", label: "Триглицериды" },
+  { value: "tsh", label: "ТТГ (TSH)" },
+  { value: "free_t4", label: "Свободный T4" },
+  { value: "creatinine", label: "Креатинин" },
+  { value: "alt", label: "АЛТ" },
+  { value: "ast", label: "АСТ" },
+  { value: "crp", label: "СРБ (CRP)" },
+  { value: "uric_acid", label: "Мочевая кислота" },
+  { value: "sodium", label: "Натрий" },
+  { value: "potassium", label: "Калий" },
+  { value: "magnesium", label: "Магний" },
 ];
 
 const STATUS_STYLE: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle2; label: string }> = {
-  normal: { variant: "default", icon: CheckCircle2, label: "Normal" },
-  low: { variant: "outline", icon: AlertTriangle, label: "Low" },
-  high: { variant: "outline", icon: AlertTriangle, label: "High" },
-  critical_low: { variant: "destructive", icon: AlertCircle, label: "Critical Low" },
-  critical_high: { variant: "destructive", icon: AlertCircle, label: "Critical High" },
-  unknown: { variant: "secondary", icon: AlertCircle, label: "Unknown" },
+  normal:        { variant: "default",     icon: CheckCircle2, label: "Норма" },
+  low:           { variant: "outline",     icon: AlertTriangle, label: "Низкий" },
+  high:          { variant: "outline",     icon: AlertTriangle, label: "Высокий" },
+  critical_low:  { variant: "destructive", icon: AlertCircle,  label: "Крит. низкий" },
+  critical_high: { variant: "destructive", icon: AlertCircle,  label: "Крит. высокий" },
+  unknown:       { variant: "secondary",   icon: AlertCircle,  label: "Неизвестно" },
 };
 
 export default function LabsPage() {
@@ -99,72 +99,75 @@ export default function LabsPage() {
     grouped[l.marker]!.push(l);
   }
 
+  const markerLabel = (m: string) =>
+    COMMON_MARKERS.find((x) => x.value === m)?.label ?? m.replace(/_/g, " ");
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Lab Results</h1>
-          <p className="text-muted-foreground text-sm">Track and interpret your biomarkers over time</p>
+          <h1 className="text-2xl font-bold tracking-tight">Анализы крови</h1>
+          <p className="text-muted-foreground text-sm">Отслеживание биомаркеров в динамике</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-1" /> Add Result</Button>
+            <Button><Plus className="h-4 w-4 mr-1" /> Добавить</Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Lab Result</DialogTitle>
+              <DialogTitle>Добавить результат анализа</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">Marker</label>
+                <label className="text-sm text-muted-foreground">Показатель</label>
                 <Select value={marker} onValueChange={setMarker}>
-                  <SelectTrigger><SelectValue placeholder="Select marker" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Выберите показатель" /></SelectTrigger>
                   <SelectContent>
                     {COMMON_MARKERS.map((m) => (
                       <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                     ))}
-                    <SelectItem value="__custom__">Other (custom)</SelectItem>
+                    <SelectItem value="__custom__">Другой (ввести вручную)</SelectItem>
                   </SelectContent>
                 </Select>
                 {marker === "__custom__" && (
-                  <Input placeholder="Custom marker name" value={customMarker} onChange={(e) => setCustomMarker(e.target.value)} className="mt-1" />
+                  <Input placeholder="Название показателя" value={customMarker} onChange={(e) => setCustomMarker(e.target.value)} className="mt-1" />
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Value</label>
+                  <label className="text-sm text-muted-foreground">Значение</label>
                   <Input type="number" value={value} onChange={(e) => setValue(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Unit</label>
-                  <Input placeholder="e.g. ng/mL, g/L" value={unit} onChange={(e) => setUnit(e.target.value)} />
+                  <label className="text-sm text-muted-foreground">Единица измерения</label>
+                  <Input placeholder="нг/мл, г/л..." value={unit} onChange={(e) => setUnit(e.target.value)} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Ref min</label>
-                  <Input type="number" value={refMin} onChange={(e) => setRefMin(e.target.value)} placeholder="optional" />
+                  <label className="text-sm text-muted-foreground">Норма (мин.)</label>
+                  <Input type="number" value={refMin} onChange={(e) => setRefMin(e.target.value)} placeholder="необязательно" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Ref max</label>
-                  <Input type="number" value={refMax} onChange={(e) => setRefMax(e.target.value)} placeholder="optional" />
+                  <label className="text-sm text-muted-foreground">Норма (макс.)</label>
+                  <Input type="number" value={refMax} onChange={(e) => setRefMax(e.target.value)} placeholder="необязательно" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Date</label>
+                  <label className="text-sm text-muted-foreground">Дата</label>
                   <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Laboratory</label>
-                  <Input placeholder="optional" value={lab} onChange={(e) => setLab(e.target.value)} />
+                  <label className="text-sm text-muted-foreground">Лаборатория</label>
+                  <Input placeholder="необязательно" value={lab} onChange={(e) => setLab(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">Notes</label>
-                <Input placeholder="optional" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                <label className="text-sm text-muted-foreground">Заметки</label>
+                <Input placeholder="необязательно" value={notes} onChange={(e) => setNotes(e.target.value)} />
               </div>
-              <Button onClick={handleAdd} disabled={addLab.isPending} className="w-full">Save Result</Button>
+              <Button onClick={handleAdd} disabled={addLab.isPending} className="w-full">Сохранить</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -174,8 +177,8 @@ export default function LabsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="font-medium">No lab results yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Add your first lab result to start tracking biomarkers.</p>
+            <p className="font-medium">Анализов пока нет</p>
+            <p className="text-sm text-muted-foreground mt-1">Добавьте первый результат, чтобы начать отслеживание биомаркеров.</p>
           </CardContent>
         </Card>
       ) : (
@@ -190,9 +193,9 @@ export default function LabsPage() {
               <Card key={markerKey} className={isAbnormal ? "border-amber-500/30" : ""}>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base capitalize flex items-center gap-2">
+                    <CardTitle className="text-base flex items-center gap-2">
                       <Icon className={`h-4 w-4 ${isAbnormal ? "text-amber-500" : "text-emerald-500"}`} />
-                      {markerKey.replace(/_/g, " ")}
+                      {markerLabel(markerKey)}
                     </CardTitle>
                     <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
                   </div>
@@ -211,7 +214,9 @@ export default function LabsPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">{new Date(e.date + "T12:00:00").toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(e.date + "T12:00:00").toLocaleDateString("ru", { day: "numeric", month: "short", year: "numeric" })}
+                            </span>
                             <Button
                               variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive"
                               onClick={() => handleDelete(e.id)}

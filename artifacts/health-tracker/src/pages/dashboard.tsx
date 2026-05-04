@@ -29,8 +29,8 @@ export default function Dashboard() {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>Failed to load dashboard data.</AlertDescription>
+        <AlertTitle>Ошибка</AlertTitle>
+        <AlertDescription>Не удалось загрузить данные панели управления.</AlertDescription>
       </Alert>
     );
   }
@@ -41,13 +41,13 @@ export default function Dashboard() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">System Overview</h1>
-          <p className="text-muted-foreground">Daily biometric summary and actionable insights.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Обзор здоровья</h1>
+          <p className="text-muted-foreground">Дневная биометрика и персональные рекомендации.</p>
         </div>
         <div className="flex gap-2">
           <Link href="/log">
             <Button>
-              Log Today <ArrowRight className="ml-2 h-4 w-4" />
+              Записать сегодня <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -56,12 +56,12 @@ export default function Dashboard() {
       {!dashboard.profileSetup && (
         <Alert className="border-primary/50 bg-primary/10">
           <AlertCircle className="h-4 w-4 text-primary" />
-          <AlertTitle className="text-primary">Profile Incomplete</AlertTitle>
+          <AlertTitle className="text-primary">Профиль не заполнен</AlertTitle>
           <AlertDescription className="mt-2 flex items-center justify-between">
-            <span className="text-primary/80">Set up your biometric profile to enable precision analysis.</span>
+            <span className="text-primary/80">Заполните профиль, чтобы активировать персональный анализ.</span>
             <Link href="/profile">
               <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                Complete Setup
+                Заполнить
               </Button>
             </Link>
           </AlertDescription>
@@ -71,53 +71,56 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Log Streak</CardTitle>
+            <CardTitle className="text-sm font-medium">Серия записей</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboard.streak?.logStreak || 0} days</div>
+            <div className="text-2xl font-bold">{dashboard.streak?.logStreak || 0} дн.</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Consistency is key to accurate data.
+              Постоянство — основа точного анализа.
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Water</CardTitle>
+            <CardTitle className="text-sm font-medium">Вода</CardTitle>
             <Droplet className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboard.today?.waterMl || 0} mL</div>
+            <div className="text-2xl font-bold">{dashboard.today?.waterMl || 0} мл</div>
             <Progress 
               value={dashboard.waterTarget ? ((dashboard.today?.waterMl || 0) / dashboard.waterTarget) * 100 : 0} 
               className="mt-3 h-2" 
             />
+            <p className="text-xs text-muted-foreground mt-1">цель: {dashboard.waterTarget} мл</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sleep</CardTitle>
+            <CardTitle className="text-sm font-medium">Сон</CardTitle>
             <Moon className="h-4 w-4 text-indigo-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboard.today?.sleep?.durationHours || 0} hr</div>
+            <div className="text-2xl font-bold">{dashboard.today?.sleep?.durationHours || 0} ч</div>
             <Progress 
               value={dashboard.sleepTarget ? ((dashboard.today?.sleep?.durationHours || 0) / dashboard.sleepTarget) * 100 : 0} 
               className="mt-3 h-2" 
             />
+            <p className="text-xs text-muted-foreground mt-1">цель: {dashboard.sleepTarget} ч</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Calories</CardTitle>
+            <CardTitle className="text-sm font-medium">Калории</CardTitle>
             <Activity className="h-4 w-4 text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboard.today?.totalNutrients?.calories || 0} kcal</div>
+            <div className="text-2xl font-bold">{dashboard.today?.totalNutrients?.calories || 0} ккал</div>
             <Progress 
               value={dashboard.calorieTarget ? ((dashboard.today?.totalNutrients?.calories || 0) / dashboard.calorieTarget) * 100 : 0} 
               className="mt-3 h-2" 
             />
+            <p className="text-xs text-muted-foreground mt-1">цель: {dashboard.calorieTarget} ккал</p>
           </CardContent>
         </Card>
       </div>
@@ -125,8 +128,8 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Top Strengths</CardTitle>
-            <CardDescription>Areas where you are excelling</CardDescription>
+            <CardTitle>Сильные стороны</CardTitle>
+            <CardDescription>Что у вас хорошо сегодня</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {dashboard.todayTopStrengths?.length > 0 ? (
@@ -137,14 +140,14 @@ export default function Dashboard() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No prominent strengths identified yet.</p>
+              <p className="text-sm text-muted-foreground">Пока нет выраженных достижений.</p>
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Top Risks</CardTitle>
-            <CardDescription>Areas requiring attention</CardDescription>
+            <CardTitle>Риски</CardTitle>
+            <CardDescription>Требует внимания сегодня</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {dashboard.todayTopRisks?.length > 0 ? (
@@ -155,7 +158,7 @@ export default function Dashboard() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No significant risks identified.</p>
+              <p className="text-sm text-muted-foreground">Значимых рисков не обнаружено.</p>
             )}
           </CardContent>
         </Card>
@@ -166,7 +169,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="text-destructive flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
-              Recent Lab Alerts
+              Отклонения в анализах
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -175,14 +178,14 @@ export default function Dashboard() {
                 <div key={lab.id} className="flex items-center justify-between rounded-md bg-background/50 p-3 border border-destructive/10">
                   <div>
                     <div className="font-medium capitalize">{lab.marker.replace(/_/g, ' ')}</div>
-                    <div className="text-xs text-muted-foreground">{new Date(lab.date).toLocaleDateString()}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(lab.date).toLocaleDateString("ru")}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="font-mono text-sm">
                       {lab.value} <span className="text-muted-foreground">{lab.unit}</span>
                     </div>
                     <Badge variant="destructive" className="capitalize">
-                      {lab.status.replace(/_/g, ' ')}
+                      {translateLabStatus(lab.status)}
                     </Badge>
                   </div>
                 </div>
@@ -193,4 +196,30 @@ export default function Dashboard() {
       )}
     </div>
   );
+}
+
+function translateStrength(s: string): string {
+  const map: Record<string, string> = {
+    "Good protein intake today": "Хорошее потребление белка сегодня",
+    "Good hydration today": "Хорошая гидратация сегодня",
+    "Physical activity logged today": "Физическая активность отмечена",
+  };
+  return map[s] ?? s;
+}
+
+function translateRisk(s: string): string {
+  const map: Record<string, string> = {
+    "No food logged today yet": "Питание сегодня ещё не записано",
+    "Low water intake today": "Мало воды выпито сегодня",
+    "Health profile not set up — personalization is disabled": "Профиль не заполнен — персонализация отключена",
+  };
+  return map[s] ?? s;
+}
+
+function translateLabStatus(s: string): string {
+  const map: Record<string, string> = {
+    normal: "норма", low: "низкий", high: "высокий",
+    critical_low: "крит. низкий", critical_high: "крит. высокий", unknown: "неизвестно",
+  };
+  return map[s] ?? s;
 }

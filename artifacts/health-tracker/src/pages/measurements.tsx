@@ -47,7 +47,7 @@ export default function MeasurementsPage() {
 
   const sorted = [...(measurements ?? [])].sort((a, b) => a.date.localeCompare(b.date));
   const chartData = sorted.map((m) => ({
-    date: new Date(m.date + "T12:00:00").toLocaleDateString("en", { month: "short", day: "numeric" }),
+    date: new Date(m.date + "T12:00:00").toLocaleDateString("ru", { month: "short", day: "numeric" }),
     weight: m.weight,
     bodyFat: m.bodyFatPercent,
     muscle: m.muscleMass,
@@ -60,7 +60,7 @@ export default function MeasurementsPage() {
   function Trend({ current, previous, unit }: { current?: number | null; previous?: number | null; unit: string }) {
     if (current == null || previous == null) return <span className="text-muted-foreground text-xs">—</span>;
     const diff = current - previous;
-    if (Math.abs(diff) < 0.05) return <span className="text-muted-foreground text-xs flex items-center gap-1"><Minus className="h-3 w-3" />stable</span>;
+    if (Math.abs(diff) < 0.05) return <span className="text-muted-foreground text-xs flex items-center gap-1"><Minus className="h-3 w-3" />стабильно</span>;
     const isDown = diff < 0;
     const Icon = isDown ? TrendingDown : TrendingUp;
     const color = isDown ? "text-emerald-500" : "text-amber-500";
@@ -76,47 +76,47 @@ export default function MeasurementsPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Body Measurements</h1>
-          <p className="text-muted-foreground text-sm">Track body composition over time</p>
+          <h1 className="text-2xl font-bold tracking-tight">Замеры тела</h1>
+          <p className="text-muted-foreground text-sm">Отслеживание состава тела в динамике</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-1" /> Add Measurement</Button>
+            <Button><Plus className="h-4 w-4 mr-1" /> Добавить замер</Button>
           </DialogTrigger>
           <DialogContent className="max-w-sm">
-            <DialogHeader><DialogTitle>Add Measurement</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Новый замер</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">Date</label>
+                <label className="text-sm text-muted-foreground">Дата</label>
                 <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Weight (kg)</label>
+                  <label className="text-sm text-muted-foreground">Вес (кг)</label>
                   <Input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Body fat %</label>
+                  <label className="text-sm text-muted-foreground">Жир (%)</label>
                   <Input type="number" step="0.1" value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Muscle mass (kg)</label>
+                  <label className="text-sm text-muted-foreground">Мышечная масса (кг)</label>
                   <Input type="number" step="0.1" value={muscle} onChange={(e) => setMuscle(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Waist (cm)</label>
+                  <label className="text-sm text-muted-foreground">Талия (см)</label>
                   <Input type="number" step="0.1" value={waist} onChange={(e) => setWaist(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Hip (cm)</label>
+                  <label className="text-sm text-muted-foreground">Бёдра (см)</label>
                   <Input type="number" step="0.1" value={hip} onChange={(e) => setHip(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">Notes</label>
-                <Input placeholder="optional" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                <label className="text-sm text-muted-foreground">Заметки</label>
+                <Input placeholder="необязательно" value={notes} onChange={(e) => setNotes(e.target.value)} />
               </div>
-              <Button onClick={handleAdd} disabled={addMeasurement.isPending} className="w-full">Save</Button>
+              <Button onClick={handleAdd} disabled={addMeasurement.isPending} className="w-full">Сохранить</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -125,10 +125,10 @@ export default function MeasurementsPage() {
       {latest && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Weight", value: latest.weight, prev: prev?.weight, unit: "kg" },
-            { label: "Body Fat", value: latest.bodyFatPercent, prev: prev?.bodyFatPercent, unit: "%" },
-            { label: "Muscle Mass", value: latest.muscleMass, prev: prev?.muscleMass, unit: "kg" },
-            { label: "Waist", value: latest.waistCm, prev: prev?.waistCm, unit: "cm" },
+            { label: "Вес", value: latest.weight, prev: prev?.weight, unit: "кг" },
+            { label: "Жир", value: latest.bodyFatPercent, prev: prev?.bodyFatPercent, unit: "%" },
+            { label: "Мышечная масса", value: latest.muscleMass, prev: prev?.muscleMass, unit: "кг" },
+            { label: "Талия", value: latest.waistCm, prev: prev?.waistCm, unit: "см" },
           ].map(({ label, value, prev: p, unit }) => (
             <Card key={label}>
               <CardContent className="pt-4">
@@ -143,7 +143,7 @@ export default function MeasurementsPage() {
 
       {chartData.length >= 2 && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Weight Trend</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Динамика веса</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={chartData}>
@@ -153,8 +153,9 @@ export default function MeasurementsPage() {
                 <Tooltip
                   contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
                   labelStyle={{ color: "hsl(var(--foreground))" }}
+                  formatter={(v: number) => [`${v} кг`, "Вес"]}
                 />
-                <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} name="Weight (kg)" />
+                <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} name="Вес (кг)" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -163,17 +164,19 @@ export default function MeasurementsPage() {
 
       {sorted.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base">History</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">История замеров</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-1">
               {[...sorted].reverse().map((m) => (
                 <div key={m.id} className="flex items-center justify-between text-sm py-2 border-b last:border-0">
-                  <span className="text-muted-foreground text-xs">{new Date(m.date + "T12:00:00").toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {new Date(m.date + "T12:00:00").toLocaleDateString("ru", { day: "numeric", month: "long", year: "numeric" })}
+                  </span>
                   <div className="flex items-center gap-4 font-mono text-xs">
-                    {m.weight != null && <span>{m.weight} kg</span>}
-                    {m.bodyFatPercent != null && <span>{m.bodyFatPercent}% fat</span>}
-                    {m.muscleMass != null && <span>{m.muscleMass} kg muscle</span>}
-                    {m.waistCm != null && <span>{m.waistCm} cm waist</span>}
+                    {m.weight != null && <span>{m.weight} кг</span>}
+                    {m.bodyFatPercent != null && <span>{m.bodyFatPercent}% жира</span>}
+                    {m.muscleMass != null && <span>{m.muscleMass} кг мышц</span>}
+                    {m.waistCm != null && <span>{m.waistCm} см талия</span>}
                   </div>
                 </div>
               ))}
@@ -182,11 +185,11 @@ export default function MeasurementsPage() {
         </Card>
       )}
 
-      {!measurements || measurements.length === 0 && (
+      {(!measurements || measurements.length === 0) && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="font-medium">No measurements yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Add your first measurement to start tracking body composition.</p>
+            <p className="font-medium">Замеров пока нет</p>
+            <p className="text-sm text-muted-foreground mt-1">Добавьте первый замер, чтобы начать отслеживать состав тела.</p>
           </CardContent>
         </Card>
       )}

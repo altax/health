@@ -18,6 +18,7 @@ import type {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 import {
   Utensils, Droplets, Moon, Activity, Heart, Plus, Trash2, Search, ChevronLeft, ChevronRight,
 } from "lucide-react";
@@ -45,6 +46,13 @@ function nextDay(date: string) {
   return toDateStr(d);
 }
 
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: "Завтрак",
+  lunch: "Обед",
+  dinner: "Ужин",
+  snack: "Перекус",
+};
+
 export default function LogPage() {
   const today = toDateStr(new Date());
   const [, params] = useRoute("/log/:date");
@@ -62,10 +70,7 @@ export default function LogPage() {
   const addActivity = useAddActivityEntry();
   const deleteActivity = useDeleteActivityEntry();
 
-  // Water
   const [waterInput, setWaterInput] = useState("");
-
-  // Food form
   const [foodQuery, setFoodQuery] = useState("");
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [amount, setAmount] = useState(100);
@@ -77,7 +82,6 @@ export default function LogPage() {
     { query: { enabled: foodQuery.length >= 2 } }
   );
 
-  // Activity form
   const [actType, setActType] = useState("");
   const [actCategory, setActCategory] = useState<"cardio" | "strength" | "flexibility" | "sports" | "other">("cardio");
   const [actDuration, setActDuration] = useState(30);
@@ -85,13 +89,11 @@ export default function LogPage() {
   const [actCalories, setActCalories] = useState("");
   const [actSteps, setActSteps] = useState("");
 
-  // Sleep form
   const [sleepHours, setSleepHours] = useState("");
   const [sleepQuality, setSleepQuality] = useState(7);
   const [bedtime, setBedtime] = useState("");
   const [wakeTime, setWakeTime] = useState("");
 
-  // Wellbeing
   const [energy, setEnergy] = useState(7);
   const [mood, setMood] = useState(7);
   const [focus, setFocus] = useState(7);
@@ -219,57 +221,59 @@ export default function LogPage() {
   const meals = ["breakfast", "lunch", "dinner", "snack"] as const;
   const mealEntries = (meal: string) => log?.foodEntries?.filter((e) => e.mealType === meal) ?? [];
 
+  const dateLabel = new Date(date + "T12:00:00").toLocaleDateString("ru", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
+  });
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Date navigation */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Daily Log</h1>
-          <p className="text-muted-foreground text-sm">
-            {new Date(date + "T12:00:00").toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-            {isToday && <Badge variant="secondary" className="ml-2">Today</Badge>}
+          <h1 className="text-2xl font-bold tracking-tight">Дневник</h1>
+          <p className="text-muted-foreground text-sm capitalize">
+            {dateLabel}
+            {isToday && <Badge variant="secondary" className="ml-2">Сегодня</Badge>}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => navigate(`/log/${prevDay(date)}`)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/log/${today}`)}>Today</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/log/${today}`)}>Сегодня</Button>
           <Button variant="outline" size="icon" onClick={() => navigate(`/log/${nextDay(date)}`)} disabled={isToday}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Summary row */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-1">
               <Utensils className="h-4 w-4 text-orange-400" />
-              <span className="text-xs text-muted-foreground font-medium">Calories</span>
+              <span className="text-xs text-muted-foreground font-medium">Калории</span>
             </div>
             <div className="text-xl font-bold">{Math.round(calories)}</div>
-            <div className="text-xs text-muted-foreground">kcal logged</div>
+            <div className="text-xs text-muted-foreground">ккал записано</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-1">
               <Activity className="h-4 w-4 text-emerald-400" />
-              <span className="text-xs text-muted-foreground font-medium">Protein</span>
+              <span className="text-xs text-muted-foreground font-medium">Белок</span>
             </div>
-            <div className="text-xl font-bold">{Math.round(protein)}g</div>
-            <div className="text-xs text-muted-foreground">of ~130g target</div>
+            <div className="text-xl font-bold">{Math.round(protein)} г</div>
+            <div className="text-xs text-muted-foreground">цель ~130 г</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-1">
               <Droplets className="h-4 w-4 text-blue-400" />
-              <span className="text-xs text-muted-foreground font-medium">Water</span>
+              <span className="text-xs text-muted-foreground font-medium">Вода</span>
             </div>
-            <div className="text-xl font-bold">{Math.round(waterMl)} mL</div>
+            <div className="text-xl font-bold">{Math.round(waterMl)} мл</div>
             <Progress value={Math.min((waterMl / waterGoal) * 100, 100)} className="h-1 mt-1" />
           </CardContent>
         </Card>
@@ -277,13 +281,13 @@ export default function LogPage() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-1">
               <Moon className="h-4 w-4 text-indigo-400" />
-              <span className="text-xs text-muted-foreground font-medium">Sleep</span>
+              <span className="text-xs text-muted-foreground font-medium">Сон</span>
             </div>
             <div className="text-xl font-bold">
-              {log?.sleep?.durationHours ? `${log.sleep.durationHours}h` : "—"}
+              {log?.sleep?.durationHours ? `${log.sleep.durationHours} ч` : "—"}
             </div>
             <div className="text-xs text-muted-foreground">
-              {log?.sleep?.morningFeeling ?? "not logged"}
+              {log?.sleep?.qualityScore ? `качество: ${log.sleep.qualityScore}/10` : "не записан"}
             </div>
           </CardContent>
         </Card>
@@ -291,32 +295,34 @@ export default function LogPage() {
 
       <Tabs defaultValue="food">
         <TabsList className="w-full md:w-auto">
-          <TabsTrigger value="food"><Utensils className="h-3.5 w-3.5 mr-1.5" />Food</TabsTrigger>
-          <TabsTrigger value="water"><Droplets className="h-3.5 w-3.5 mr-1.5" />Water</TabsTrigger>
-          <TabsTrigger value="activity"><Activity className="h-3.5 w-3.5 mr-1.5" />Activity</TabsTrigger>
-          <TabsTrigger value="sleep"><Moon className="h-3.5 w-3.5 mr-1.5" />Sleep</TabsTrigger>
-          <TabsTrigger value="wellbeing"><Heart className="h-3.5 w-3.5 mr-1.5" />Wellbeing</TabsTrigger>
+          <TabsTrigger value="food"><Utensils className="h-3.5 w-3.5 mr-1.5" />Питание</TabsTrigger>
+          <TabsTrigger value="water"><Droplets className="h-3.5 w-3.5 mr-1.5" />Вода</TabsTrigger>
+          <TabsTrigger value="activity"><Activity className="h-3.5 w-3.5 mr-1.5" />Активность</TabsTrigger>
+          <TabsTrigger value="sleep"><Moon className="h-3.5 w-3.5 mr-1.5" />Сон</TabsTrigger>
+          <TabsTrigger value="wellbeing"><Heart className="h-3.5 w-3.5 mr-1.5" />Самочувствие</TabsTrigger>
         </TabsList>
 
-        {/* ── FOOD ── */}
+        {/* ПИТАНИЕ */}
         <TabsContent value="food" className="space-y-4 mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">Add Food</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Добавить продукт</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search food (e.g. chicken, oats)..."
+                    placeholder="Поиск продукта (курица, овсянка...)"
                     className="pl-9"
                     value={foodQuery}
                     onChange={(e) => { setFoodQuery(e.target.value); setSelectedFood(null); }}
                   />
                 </div>
                 <Select value={mealType} onValueChange={(v) => setMealType(v as typeof mealType)}>
-                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {meals.map((m) => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}
+                    {meals.map((m) => (
+                      <SelectItem key={m} value={m}>{MEAL_LABELS[m]}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -330,7 +336,7 @@ export default function LogPage() {
                       className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center justify-between text-sm"
                     >
                       <span>{f.name}</span>
-                      <span className="text-muted-foreground text-xs">{f.nutrients.calories} kcal/{f.servingSize}g</span>
+                      <span className="text-muted-foreground text-xs">{f.nutrients.calories} ккал/{f.servingSize}г</span>
                     </button>
                   ))}
                 </div>
@@ -338,7 +344,7 @@ export default function LogPage() {
 
               {!selectedFood && foodQuery.length < 2 && (
                 <Input
-                  placeholder="Or enter food manually..."
+                  placeholder="Или введите название вручную..."
                   value={manualFood}
                   onChange={(e) => setManualFood(e.target.value)}
                 />
@@ -348,16 +354,16 @@ export default function LogPage() {
                 <div className="rounded-md bg-muted/40 px-3 py-2 text-sm space-y-1">
                   <div className="font-medium">{selectedFood.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    Per {amount}g: {Math.round(selectedFood.nutrients.calories * amount / selectedFood.servingSize)} kcal ·{" "}
-                    {Math.round(selectedFood.nutrients.protein * amount / selectedFood.servingSize * 10) / 10}g protein ·{" "}
-                    {Math.round(selectedFood.nutrients.fat * amount / selectedFood.servingSize * 10) / 10}g fat ·{" "}
-                    {Math.round(selectedFood.nutrients.carbs * amount / selectedFood.servingSize * 10) / 10}g carbs
+                    На {amount}г: {Math.round(selectedFood.nutrients.calories * amount / selectedFood.servingSize)} ккал ·{" "}
+                    {Math.round(selectedFood.nutrients.protein * amount / selectedFood.servingSize * 10) / 10}г белка ·{" "}
+                    {Math.round(selectedFood.nutrients.fat * amount / selectedFood.servingSize * 10) / 10}г жиров ·{" "}
+                    {Math.round(selectedFood.nutrients.carbs * amount / selectedFood.servingSize * 10) / 10}г углеводов
                   </div>
                 </div>
               )}
 
               <div className="flex items-center gap-3">
-                <label className="text-sm text-muted-foreground whitespace-nowrap">Amount (g):</label>
+                <label className="text-sm text-muted-foreground whitespace-nowrap">Количество (г):</label>
                 <Input
                   type="number"
                   value={amount}
@@ -366,7 +372,7 @@ export default function LogPage() {
                   min={1}
                 />
                 <Button onClick={handleAddFood} disabled={addFood.isPending || (!selectedFood && !manualFood)} className="ml-auto">
-                  <Plus className="h-4 w-4 mr-1" /> Add
+                  <Plus className="h-4 w-4 mr-1" /> Добавить
                 </Button>
               </div>
             </CardContent>
@@ -378,18 +384,18 @@ export default function LogPage() {
             return (
               <Card key={meal}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm capitalize font-semibold">{meal}</CardTitle>
+                  <CardTitle className="text-sm font-semibold">{MEAL_LABELS[meal]}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {entries.map((e) => (
                     <div key={e.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
                       <div>
                         <span className="font-medium">{e.foodName}</span>
-                        <span className="text-muted-foreground ml-2 text-xs">{e.amount}g</span>
+                        <span className="text-muted-foreground ml-2 text-xs">{e.amount}г</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-muted-foreground text-xs font-mono">
-                          {Math.round(e.nutrients.calories)} kcal · {Math.round(e.nutrients.protein)}g
+                          {Math.round(e.nutrients.calories)} ккал · {Math.round(e.nutrients.protein)}г белка
                         </span>
                         <Button
                           variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
@@ -406,77 +412,79 @@ export default function LogPage() {
           })}
         </TabsContent>
 
-        {/* ── WATER ── */}
+        {/* ВОДА */}
         <TabsContent value="water" className="mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">Water Intake</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Потребление воды</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
                 <div className="text-5xl font-bold tabular-nums">{Math.round(waterMl)}</div>
-                <div className="text-muted-foreground">mL of {waterGoal} mL goal</div>
+                <div className="text-muted-foreground">мл из {waterGoal} мл (цель)</div>
                 <Progress value={Math.min((waterMl / waterGoal) * 100, 100)} className="h-3 mt-4" />
               </div>
               <div className="flex gap-2 justify-center flex-wrap">
                 {[150, 250, 330, 500].map((ml) => (
                   <Button key={ml} variant="outline" onClick={() => handleQuickWater(ml)}>
-                    +{ml} mL
+                    +{ml} мл
                   </Button>
                 ))}
               </div>
               <div className="flex gap-2">
                 <Input
                   type="number"
-                  placeholder="Custom amount (mL)"
+                  placeholder="Свой объём (мл)"
                   value={waterInput}
                   onChange={(e) => setWaterInput(e.target.value)}
                 />
-                <Button onClick={handleAddWater}>Add</Button>
+                <Button onClick={handleAddWater}>Добавить</Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* ── ACTIVITY ── */}
+        {/* АКТИВНОСТЬ */}
         <TabsContent value="activity" className="space-y-4 mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">Log Activity</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Записать активность</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <Input placeholder="Activity name (e.g. Running, Yoga)" value={actType} onChange={(e) => setActType(e.target.value)} />
+              <Input placeholder="Вид активности (бег, йога, силовая...)" value={actType} onChange={(e) => setActType(e.target.value)} />
               <div className="grid grid-cols-2 gap-2">
                 <Select value={actCategory} onValueChange={(v) => setActCategory(v as typeof actCategory)}>
-                  <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Категория" /></SelectTrigger>
                   <SelectContent>
-                    {["cardio", "strength", "flexibility", "sports", "other"].map((c) => (
-                      <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
-                    ))}
+                    <SelectItem value="cardio">Кардио</SelectItem>
+                    <SelectItem value="strength">Силовая</SelectItem>
+                    <SelectItem value="flexibility">Гибкость</SelectItem>
+                    <SelectItem value="sports">Спорт</SelectItem>
+                    <SelectItem value="other">Другое</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={actIntensity} onValueChange={(v) => setActIntensity(v as typeof actIntensity)}>
-                  <SelectTrigger><SelectValue placeholder="Intensity" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Интенсивность" /></SelectTrigger>
                   <SelectContent>
-                    {["light", "moderate", "vigorous"].map((i) => (
-                      <SelectItem key={i} value={i} className="capitalize">{i}</SelectItem>
-                    ))}
+                    <SelectItem value="light">Лёгкая</SelectItem>
+                    <SelectItem value="moderate">Умеренная</SelectItem>
+                    <SelectItem value="vigorous">Высокая</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">Duration: {actDuration} min</label>
+                <label className="text-sm text-muted-foreground">Длительность: {actDuration} мин</label>
                 <Slider value={[actDuration]} min={5} max={180} step={5} onValueChange={([v]) => setActDuration(v)} />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Input placeholder="Calories burned (optional)" value={actCalories} onChange={(e) => setActCalories(e.target.value)} type="number" />
-                <Input placeholder="Steps (optional)" value={actSteps} onChange={(e) => setActSteps(e.target.value)} type="number" />
+                <Input placeholder="Сожжено калорий (необязательно)" value={actCalories} onChange={(e) => setActCalories(e.target.value)} type="number" />
+                <Input placeholder="Шаги (необязательно)" value={actSteps} onChange={(e) => setActSteps(e.target.value)} type="number" />
               </div>
               <Button onClick={handleAddActivity} disabled={!actType || addActivity.isPending} className="w-full">
-                <Plus className="h-4 w-4 mr-1" /> Add Activity
+                <Plus className="h-4 w-4 mr-1" /> Добавить активность
               </Button>
             </CardContent>
           </Card>
 
           {log?.activityEntries && log.activityEntries.length > 0 && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Today's Activity</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Активность за день</CardTitle></CardHeader>
               <CardContent className="space-y-2">
                 {log.activityEntries.map((a) => (
                   <div key={a.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
@@ -485,7 +493,7 @@ export default function LogPage() {
                       <span className="text-muted-foreground ml-2 text-xs capitalize">{a.category} · {a.intensity}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground text-xs">{a.durationMinutes} min</span>
+                      <span className="text-muted-foreground text-xs">{a.durationMinutes} мин</span>
                       <Button
                         variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
                         onClick={() => handleDeleteActivity(a.id)}
@@ -500,58 +508,58 @@ export default function LogPage() {
           )}
         </TabsContent>
 
-        {/* ── SLEEP ── */}
+        {/* СОН */}
         <TabsContent value="sleep" className="mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">Sleep Log</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Сон</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Bedtime</label>
+                  <label className="text-sm text-muted-foreground">Время отхода ко сну</label>
                   <Input type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-muted-foreground">Wake time</label>
+                  <label className="text-sm text-muted-foreground">Время пробуждения</label>
                   <Input type="time" value={wakeTime} onChange={(e) => setWakeTime(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">Duration (hours)</label>
+                <label className="text-sm text-muted-foreground">Продолжительность (часы)</label>
                 <Input
                   type="number"
                   step="0.25"
                   min={0}
                   max={24}
-                  placeholder="e.g. 7.5"
+                  placeholder="напр. 7.5"
                   value={sleepHours}
                   onChange={(e) => setSleepHours(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">Sleep quality: {sleepQuality}/10</label>
+                <label className="text-sm text-muted-foreground">Качество сна: {sleepQuality}/10</label>
                 <Slider value={[sleepQuality]} min={1} max={10} step={1} onValueChange={([v]) => setSleepQuality(v)} />
               </div>
               {log?.sleep && (
                 <div className="rounded-md bg-muted/40 p-3 text-sm space-y-1">
-                  <div className="font-medium text-xs text-muted-foreground">SAVED</div>
-                  <div>{log.sleep.durationHours ? `${log.sleep.durationHours}h` : "—"} · Quality {log.sleep.qualityScore ?? "—"}/10</div>
+                  <div className="font-medium text-xs text-muted-foreground">СОХРАНЕНО</div>
+                  <div>{log.sleep.durationHours ? `${log.sleep.durationHours} ч` : "—"} · Качество {log.sleep.qualityScore ?? "—"}/10</div>
                 </div>
               )}
-              <Button onClick={handleSaveSleep} disabled={patchLog.isPending} className="w-full">Save Sleep</Button>
+              <Button onClick={handleSaveSleep} disabled={patchLog.isPending} className="w-full">Сохранить сон</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* ── WELLBEING ── */}
+        {/* САМОЧУВСТВИЕ */}
         <TabsContent value="wellbeing" className="mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">Subjective Wellbeing</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Субъективное самочувствие</CardTitle></CardHeader>
             <CardContent className="space-y-5">
               {([
-                ["Energy", energy, setEnergy],
-                ["Mood", mood, setMood],
-                ["Focus", focus, setFocus],
-                ["Stress", stress, setStress],
+                ["Энергия", energy, setEnergy],
+                ["Настроение", mood, setMood],
+                ["Концентрация", focus, setFocus],
+                ["Стресс", stress, setStress],
               ] as [string, number, (v: number) => void][]).map(([label, val, setter]) => (
                 <div key={label} className="space-y-1">
                   <div className="flex justify-between text-sm">
@@ -563,9 +571,9 @@ export default function LogPage() {
               ))}
               {log?.wellbeing && (
                 <div className="rounded-md bg-muted/40 p-3 text-sm">
-                  <div className="text-xs text-muted-foreground font-medium mb-1">SAVED</div>
+                  <div className="text-xs text-muted-foreground font-medium mb-1">СОХРАНЕНО</div>
                   <div className="grid grid-cols-4 gap-2">
-                    {[["Energy", log.wellbeing.energyLevel], ["Mood", log.wellbeing.moodScore], ["Focus", log.wellbeing.focusScore], ["Stress", log.wellbeing.stressLevel]].map(([k, v]) => (
+                    {[["Энергия", log.wellbeing.energyLevel], ["Настроение", log.wellbeing.moodScore], ["Концентрация", log.wellbeing.focusScore], ["Стресс", log.wellbeing.stressLevel]].map(([k, v]) => (
                       <div key={String(k)} className="text-center">
                         <div className="text-xs text-muted-foreground">{k}</div>
                         <div className="font-bold">{v ?? "—"}</div>
@@ -574,7 +582,7 @@ export default function LogPage() {
                   </div>
                 </div>
               )}
-              <Button onClick={handleSaveWellbeing} disabled={patchLog.isPending} className="w-full">Save Wellbeing</Button>
+              <Button onClick={handleSaveWellbeing} disabled={patchLog.isPending} className="w-full">Сохранить самочувствие</Button>
             </CardContent>
           </Card>
         </TabsContent>

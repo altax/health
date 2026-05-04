@@ -1,45 +1,44 @@
 import { useState } from "react";
 import { useGetNutrientAnalysis, getGetNutrientAnalysisQueryKey } from "@workspace/api-client-react";
 import type { NutrientStatus } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, CheckCircle2, AlertTriangle, HelpCircle } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof CheckCircle2; badgeVariant: "default" | "secondary" | "destructive" | "outline" }> = {
-  normal: { label: "Normal", color: "text-emerald-500", icon: CheckCircle2, badgeVariant: "default" },
-  likely_deficient: { label: "Likely Low", color: "text-red-500", icon: AlertCircle, badgeVariant: "destructive" },
-  possibly_deficient: { label: "Possibly Low", color: "text-amber-500", icon: AlertTriangle, badgeVariant: "outline" },
-  likely_excess: { label: "Likely Excess", color: "text-red-500", icon: AlertCircle, badgeVariant: "destructive" },
-  possibly_excess: { label: "Possibly Excess", color: "text-amber-500", icon: AlertTriangle, badgeVariant: "outline" },
-  insufficient_data: { label: "No Data", color: "text-muted-foreground", icon: HelpCircle, badgeVariant: "secondary" },
-  needs_biomarker: { label: "Needs Lab", color: "text-blue-500", icon: HelpCircle, badgeVariant: "secondary" },
+  normal:             { label: "Норма",         color: "text-emerald-500",        icon: CheckCircle2, badgeVariant: "default" },
+  likely_deficient:   { label: "Дефицит",       color: "text-red-500",            icon: AlertCircle,  badgeVariant: "destructive" },
+  possibly_deficient: { label: "Возм. дефицит", color: "text-amber-500",          icon: AlertTriangle,badgeVariant: "outline" },
+  likely_excess:      { label: "Избыток",        color: "text-red-500",            icon: AlertCircle,  badgeVariant: "destructive" },
+  possibly_excess:    { label: "Возм. избыток",  color: "text-amber-500",          icon: AlertTriangle,badgeVariant: "outline" },
+  insufficient_data:  { label: "Нет данных",     color: "text-muted-foreground",   icon: HelpCircle,   badgeVariant: "secondary" },
+  needs_biomarker:    { label: "Нужен анализ",   color: "text-blue-500",           icon: HelpCircle,   badgeVariant: "secondary" },
 };
 
 const CONFIDENCE_CONFIG: Record<string, { label: string; color: string }> = {
-  high: { label: "High confidence", color: "text-emerald-600" },
-  medium: { label: "Medium confidence", color: "text-amber-600" },
-  low: { label: "Low confidence", color: "text-orange-500" },
-  very_low: { label: "Very low confidence", color: "text-muted-foreground" },
+  high:     { label: "Высокая достоверность",    color: "text-emerald-600" },
+  medium:   { label: "Средняя достоверность",    color: "text-amber-600" },
+  low:      { label: "Низкая достоверность",     color: "text-orange-500" },
+  very_low: { label: "Очень низкая достоверность", color: "text-muted-foreground" },
 };
 
 const NUTRIENT_LABELS: Record<string, string> = {
-  calories: "Calories", protein: "Protein", fat: "Total Fat", carbs: "Carbohydrates",
-  fiber: "Fiber", sugar: "Sugar", sodium: "Sodium", potassium: "Potassium",
-  calcium: "Calcium", magnesium: "Magnesium", iron: "Iron", zinc: "Zinc",
-  vitaminA: "Vitamin A", vitaminC: "Vitamin C", vitaminD: "Vitamin D", vitaminE: "Vitamin E",
-  vitaminK: "Vitamin K", vitaminB1: "Vitamin B1 (Thiamine)", vitaminB2: "Vitamin B2 (Riboflavin)",
-  vitaminB3: "Vitamin B3 (Niacin)", vitaminB6: "Vitamin B6", vitaminB12: "Vitamin B12",
-  folate: "Folate", omega3: "Omega-3", saturatedFat: "Saturated Fat", cholesterol: "Cholesterol",
+  calories: "Калории", protein: "Белки", fat: "Жиры", carbs: "Углеводы",
+  fiber: "Клетчатка", sugar: "Сахар", sodium: "Натрий", potassium: "Калий",
+  calcium: "Кальций", magnesium: "Магний", iron: "Железо", zinc: "Цинк",
+  vitaminA: "Витамин A", vitaminC: "Витамин C", vitaminD: "Витамин D", vitaminE: "Витамин E",
+  vitaminK: "Витамин K", vitaminB1: "Витамин B1 (тиамин)", vitaminB2: "Витамин B2 (рибофлавин)",
+  vitaminB3: "Витамин B3 (ниацин)", vitaminB6: "Витамин B6", vitaminB12: "Витамин B12",
+  folate: "Фолат", omega3: "Омега-3", saturatedFat: "Насыщенные жиры", cholesterol: "Холестерин",
 };
 
 const GROUPS: Record<string, string[]> = {
-  "Macros": ["calories", "protein", "fat", "carbs", "fiber", "sugar", "saturatedFat", "cholesterol"],
-  "Minerals": ["sodium", "potassium", "calcium", "magnesium", "iron", "zinc"],
-  "Vitamins": ["vitaminA", "vitaminC", "vitaminD", "vitaminE", "vitaminK", "vitaminB1", "vitaminB2", "vitaminB3", "vitaminB6", "vitaminB12", "folate"],
-  "Fatty Acids": ["omega3"],
+  "Макронутриенты": ["calories", "protein", "fat", "carbs", "fiber", "sugar", "saturatedFat", "cholesterol"],
+  "Минералы":       ["sodium", "potassium", "calcium", "magnesium", "iron", "zinc"],
+  "Витамины":       ["vitaminA", "vitaminC", "vitaminD", "vitaminE", "vitaminK", "vitaminB1", "vitaminB2", "vitaminB3", "vitaminB6", "vitaminB12", "folate"],
+  "Жирные кислоты": ["omega3"],
 };
 
 function NutrientCard({ n }: { n: NutrientStatus }) {
@@ -63,14 +62,9 @@ function NutrientCard({ n }: { n: NutrientStatus }) {
         </div>
         <div className="flex items-center gap-2 mb-1">
           <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${barColor}`}
-              style={{ width: `${pct}%` }}
-            />
+            <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
           </div>
-          <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">
-            {n.percentOfTarget}%
-          </span>
+          <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">{n.percentOfTarget}%</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
@@ -80,7 +74,7 @@ function NutrientCard({ n }: { n: NutrientStatus }) {
         </div>
         {n.labValue != null && (
           <div className="text-xs text-blue-500 mt-0.5">
-            Lab: {n.labValue} ({n.labDate})
+            Анализ: {n.labValue} ({n.labDate})
           </div>
         )}
       </div>
@@ -108,40 +102,46 @@ export default function NutrientsPage() {
   }
 
   const nutrients = data?.nutrients ?? [];
-
   const statusCounts = {
     normal: nutrients.filter((n) => n.status === "normal").length,
     issues: nutrients.filter((n) => n.status.includes("deficient") || n.status.includes("excess")).length,
     noData: nutrients.filter((n) => n.status === "insufficient_data").length,
   };
 
+  const dataQualityLabel: Record<string, string> = {
+    insufficient: "недостаточно данных",
+    low: "низкое",
+    medium: "среднее",
+    high: "высокое",
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Nutrient Analysis</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Анализ нутриентов</h1>
           <p className="text-muted-foreground text-sm">
-            Average intake vs. RDA targets ·{" "}
-            <span className="text-emerald-500">{statusCounts.normal} normal</span>
+            Среднее потребление vs. суточные нормы ·{" "}
+            <span className="text-emerald-500">{statusCounts.normal} в норме</span>
             {" · "}
-            <span className="text-amber-500">{statusCounts.issues} flagged</span>
+            <span className="text-amber-500">{statusCounts.issues} отклонений</span>
             {" · "}
-            <span className="text-muted-foreground">{statusCounts.noData} no data</span>
+            <span className="text-muted-foreground">{statusCounts.noData} нет данных</span>
           </p>
         </div>
         <Tabs value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
           <TabsList>
-            <TabsTrigger value="1d">Today</TabsTrigger>
-            <TabsTrigger value="7d">7 days</TabsTrigger>
-            <TabsTrigger value="28d">28 days</TabsTrigger>
-            <TabsTrigger value="90d">90 days</TabsTrigger>
+            <TabsTrigger value="1d">Сегодня</TabsTrigger>
+            <TabsTrigger value="7d">7 дней</TabsTrigger>
+            <TabsTrigger value="28d">28 дней</TabsTrigger>
+            <TabsTrigger value="90d">90 дней</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       {data && (
         <div className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
-          Data quality: <strong>{data.dataQuality}</strong> · {data.daysWithData} of {data.totalDays} days logged
+          Качество данных: <strong>{dataQualityLabel[data.dataQuality] ?? data.dataQuality}</strong> · записано {data.daysWithData} из {data.totalDays} дней
         </div>
       )}
 
