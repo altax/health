@@ -43,15 +43,31 @@ A full-stack personal health tracking web application — futuristic dark UI in 
 
 ## Features
 
-1. **Home / 3D Body** (`/`) — interactive 3D parametric body that scales to user's actual height/weight/body fat; floating metric cards (water, sleep, calories, body fat)
+1. **Home / 3D Body** (`/`) — full interactive 3D human body (Lathe torso + Capsule limbs + custom head), 3 view modes (surface/skeleton/muscle), 10 clickable organ/system hotspots with floating scientific info panels, scan ring animation, grid platform. Controllable via mouse/touch.
 2. **Daily Log** (`/log/:date`) — food entry with food search, water tracking, activity logging, sleep + wellbeing sliders
-3. **Nutrient Analysis** (`/nutrients`) — 26 nutrients vs. RDA targets across 1d/7d/28d/90d periods
+3. **Nutrient Analysis** (`/nutrients`) — 30+ nutrients vs. personalized targets (Mifflin-St Jeor + PAL personalization) across 1d/7d/28d/90d periods. Sources: EFSA 2023, IOM DRI 2024, WHO 2023.
 4. **Lab Results** (`/labs`) — add/delete biomarkers (23 common + custom), auto-status
 5. **Body Measurements** (`/measurements`) — weight, body fat %, muscle, waist/hip trend chart
-6. **Recommendations** (`/recommendations`) — AI-style prioritized recommendations (all in Russian)
+6. **Recommendations** (`/recommendations`) — evidence-based prioritized recommendations with PMID references (BJSM, NEJM, Lancet, JAMA, Nature). All in Russian.
 7. **Weekly Report** (`/weekly`) — weekly averages, comparison to prev week, bar chart
 8. **History** (`/history`) — last 30 log days summary
 9. **Profile** (`/profile`) — demographics, activity level, goals, medical context
+
+## 3D Body System (BodyScene.tsx)
+
+- **Geometry**: LatheGeometry torso (48 segments, organic profile curve), CapsuleGeometry limbs, custom SphereGeometry head with vertex manipulation for realistic skull shape
+- **View Modes**: Surface (skin layer) / X-Ray (skeleton + rib cage + femur bones) / Muscle (pecs, abs, obliques, biceps, quads, calves)
+- **Hotspots**: 10 anatomical regions — brain, heart, lungs, liver, gut, kidneys, muscles, bones, skin, hormones — each with glowing pulse animation and scientific info panel (Html overlay from drei)
+- **Physics**: Scan ring sweeps the body, ambient/directional/point lighting with shadows, OrbitControls (no pan, damping 0.07)
+- **Materials**: MeshPhysicalMaterial (skin), MeshBasicMaterial (glow/bone/hotspot)
+
+## Analysis Engine (analysis.ts)
+
+- Personalized TDEE via Mifflin-St Jeor BMR × PAL (IOM 2024 activity multipliers)
+- Protein target: 1.6–2.2 g/kg based on activity level (Morton et al. BJSM 2018 meta-analysis)
+- 30 tracked nutrients with evidence sources cited inline
+- Age/sex adjustments: post-menopausal Ca, absorption-adjusted B12 (>50 yo), sex-specific iron
+- Recommendations cite specific PMID/DOI: REDUCE-IT NEJM 2019, Reynolds Lancet 2019, Holick NEJM 2007, etc.
 
 ## API Routes
 
