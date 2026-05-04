@@ -4,6 +4,7 @@ import {
   dailyLogTable,
   foodEntryTable,
   activityEntryTable,
+  supplementEntryTable,
 } from "@workspace/db";
 import { eq, desc, and, gte, lte } from "drizzle-orm";
 
@@ -75,12 +76,22 @@ function sumNutrients(entries: Array<{ nutrients: NutrientData }>): NutrientData
 }
 
 async function buildDailyLogResponse(log: typeof dailyLogTable.$inferSelect) {
-  const [foods, activities] = await Promise.all([
+  const [foods, activities, supplements] = await Promise.all([
     db.select().from(foodEntryTable).where(eq(foodEntryTable.date, log.date)).orderBy(foodEntryTable.createdAt),
     db.select().from(activityEntryTable).where(eq(activityEntryTable.date, log.date)).orderBy(activityEntryTable.createdAt),
+    db.select().from(supplementEntryTable).where(eq(supplementEntryTable.date, log.date)).orderBy(supplementEntryTable.createdAt),
   ]);
-  const totalNutrients = sumNutrients(foods as Array<{ nutrients: NutrientData }>);
-  return { ...log, foodEntries: foods, activityEntries: activities, totalNutrients };
+  const foodNutrients = sumNutrients(foods as Array<{ nutrients: NutrientData }>);
+  // Merge supplement nutrient contributions into total
+  const totalNutrients = { ...foodNutrients };
+  for (const supp of supplements) {
+    const n = supp.nutrients as Record<string, number> | null;
+    if (!n) continue;
+    for (const [k, v] of Object.entries(n)) {
+      (totalNutrients as Record<string, number>)[k] = ((totalNutrients as Record<string, number>)[k] ?? 0) + (v ?? 0);
+    }
+  }
+  return { ...log, foodEntries: foods, activityEntries: activities, supplementEntries: supplements, totalNutrients };
 }
 
 async function getOrCreateLog(date: string) {

@@ -21,6 +21,22 @@ export const userProfileTable = pgTable("user_profile", {
   medications: jsonb("medications").$type<string[]>().notNull().default([]),
   allergies: jsonb("allergies").$type<string[]>().notNull().default([]),
   dietaryRestrictions: jsonb("dietary_restrictions").$type<string[]>().notNull().default([]),
+  lifestyle: jsonb("lifestyle").$type<{
+    caffeinePerDayMg?: number;
+    alcoholUnitsPerWeek?: number;
+    smokingStatus?: string;
+    sweatingLevel?: string;
+    baselineStressLevel?: number;
+    mealFrequencyPerDay?: number;
+    lastMealTime?: string;
+    screenTimeHoursPerDay?: number;
+    trainingFrequencyPerWeek?: number;
+    trainingTypes?: string[];
+    wakeUpTime?: string;
+    bedTimeGoal?: string;
+  }>(),
+  bloodPressureSystolic: integer("blood_pressure_systolic"),
+  bloodPressureDiastolic: integer("blood_pressure_diastolic"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

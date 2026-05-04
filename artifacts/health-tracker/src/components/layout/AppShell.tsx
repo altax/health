@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   Home, BookOpen, FlaskConical, Ruler, Zap, TrendingUp,
-  ChevronLeft, Settings, Calendar,
+  ChevronLeft, Settings, Brain,
 } from "lucide-react";
 
 const NAV = [
@@ -13,7 +13,7 @@ const NAV = [
   { id: "labs", label: "Анализы", icon: FlaskConical, href: "/labs" },
   { id: "measurements", label: "Замеры", icon: Ruler, href: "/measurements" },
   { id: "weekly", label: "Отчёт", icon: TrendingUp, href: "/weekly" },
-  { id: "history", label: "История", icon: Calendar, href: "/history" },
+  { id: "cognitive", label: "Когниция", icon: Brain, href: "/cognitive" },
 ];
 
 export function AppShell({ children, title }: { children: React.ReactNode; title?: string }) {

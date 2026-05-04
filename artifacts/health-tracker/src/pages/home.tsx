@@ -1,14 +1,27 @@
 import { useState, lazy, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import {
   useGetDashboard, useGetNutrientAnalysis, useGetMeasurements,
 } from "@workspace/api-client-react";
 import {
   Home, BookOpen, FlaskConical, Ruler, Zap, TrendingUp,
-  Droplets, Moon, Flame, Activity, ChevronRight, RotateCcw,
-  Shield, Settings,
+  Droplets, Moon, Flame, Activity,
+  Shield, Settings, AlertTriangle, CheckCircle2, Brain, ChevronUp,
 } from "lucide-react";
+
+const BASE = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
+function apiUrl(p: string) { return `${BASE}/api${p}`; }
+
+type DailyStatus = {
+  dayStatus: string; dayStatusText: string; overallConfidence: number;
+  top3Risks: { risk: string; severity: string; detail: string }[];
+  top3Strengths: { strength: string; detail: string }[];
+  actionsToday: { action: string; priority: string; category: string }[];
+  toMeasureNext: string[];
+  nutritionGaps: string[];
+};
 
 const BodyScene = lazy(() => import("@/components/body3d/BodyScene"));
 
@@ -40,11 +53,20 @@ const NAV = [
 export default function HomePage({ profile, onResetProfile }: Props) {
   const [, navigate] = useLocation();
   const [activeNav, setActiveNav] = useState("home");
-  const [bodyRotating, setBodyRotating] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
 
   const { data: dashboard } = useGetDashboard();
   const { data: nutrients } = useGetNutrientAnalysis({ period: "7d" });
   const { data: measurements } = useGetMeasurements();
+  const { data: dailyStatus } = useQuery<DailyStatus>({
+    queryKey: ["daily-status"],
+    queryFn: async () => {
+      const r = await fetch(apiUrl("/analysis/daily-status"));
+      if (!r.ok) return null;
+      return r.json();
+    },
+    staleTime: 120_000,
+  });
 
   const latestMeasure = measurements?.[0];
   const displayWeight = latestMeasure?.weight ?? profile.weight;
@@ -61,6 +83,9 @@ export default function HomePage({ profile, onResetProfile }: Props) {
   const calorieTarget = dashboard?.calorieTarget ?? 2000;
 
   const deficientCount = nutrients?.nutrients?.filter((n) => n.status.includes("deficient")).length ?? 0;
+
+  const hasRisks = (dailyStatus?.top3Risks?.length ?? 0) > 0;
+  const confidencePct = dailyStatus?.overallConfidence ?? 0;
 
   function goTo(href: string, id: string) {
     setActiveNav(id);
@@ -211,6 +236,100 @@ export default function HomePage({ profile, onResetProfile }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Daily Status Strip */}
+      {dailyStatus && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.4 }}
+          className="relative z-20 px-4 pb-1"
+        >
+          <button
+            onClick={() => setStatusOpen((p) => !p)}
+            className="w-full glass rounded-xl px-4 py-2.5 flex items-center justify-between hover:border-white/15 transition-all"
+          >
+            <div className="flex items-center gap-2.5">
+              <Brain className="h-4 w-4 text-cyan-400" />
+              <span className="text-xs text-white/60 font-medium">Статус дня</span>
+              {hasRisks && (
+                <span className="flex items-center gap-1 text-[10px] text-amber-400">
+                  <AlertTriangle className="h-3 w-3" />{dailyStatus.top3Risks.length} риска
+                </span>
+              )}
+              {!hasRisks && confidencePct > 0 && (
+                <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                  <CheckCircle2 className="h-3 w-3" />Всё в порядке
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {confidencePct > 0 && (
+                <span className="text-xs text-white/30">{confidencePct}% данных</span>
+              )}
+              <ChevronUp className={`h-3.5 w-3.5 text-white/30 transition-transform ${statusOpen ? "" : "rotate-180"}`} />
+            </div>
+          </button>
+
+          {statusOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="glass rounded-xl mt-1 px-4 py-3 space-y-3"
+            >
+              {dailyStatus.top3Risks.length > 0 && (
+                <div>
+                  <div className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">Риски</div>
+                  <div className="space-y-1.5">
+                    {dailyStatus.top3Risks.map((r, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs">
+                        <AlertTriangle className={`h-3 w-3 mt-0.5 shrink-0 ${r.severity === "high" ? "text-red-400" : "text-amber-400"}`} />
+                        <div>
+                          <span className="text-white/80 font-medium">{r.risk}</span>
+                          {r.detail && <span className="text-white/40 ml-1">— {r.detail}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {dailyStatus.top3Strengths.length > 0 && (
+                <div>
+                  <div className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">Сильные стороны</div>
+                  <div className="space-y-1">
+                    {dailyStatus.top3Strengths.map((s, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs">
+                        <CheckCircle2 className="h-3 w-3 mt-0.5 shrink-0 text-emerald-400" />
+                        <span className="text-white/70">{s.strength}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {dailyStatus.actionsToday.length > 0 && (
+                <div>
+                  <div className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">Действия сегодня</div>
+                  <div className="space-y-1">
+                    {dailyStatus.actionsToday.slice(0, 3).map((a, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-white/60">
+                        <span className="text-cyan-400/60 font-mono">{i + 1}.</span>
+                        <span>{a.action}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <button
+                onClick={() => goTo("/cognitive", "cognitive")}
+                className="w-full text-xs text-cyan-400/60 hover:text-cyan-400 transition-colors text-center pt-1"
+              >
+                Полный когнитивный анализ →
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
 
       {/* Bottom navigation */}
       <motion.nav

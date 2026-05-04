@@ -39,6 +39,9 @@ router.put("/profile", async (req, res) => {
         medications: body.medications ?? [],
         allergies: body.allergies ?? [],
         dietaryRestrictions: body.dietaryRestrictions ?? [],
+        lifestyle: body.lifestyle ?? null,
+        bloodPressureSystolic: body.bloodPressureSystolic ?? null,
+        bloodPressureDiastolic: body.bloodPressureDiastolic ?? null,
         updatedAt: new Date(),
       })
       .returning();
@@ -65,6 +68,9 @@ router.put("/profile", async (req, res) => {
       medications: body.medications ?? profiles[0].medications,
       allergies: body.allergies ?? profiles[0].allergies,
       dietaryRestrictions: body.dietaryRestrictions ?? profiles[0].dietaryRestrictions,
+      lifestyle: body.lifestyle !== undefined ? body.lifestyle : profiles[0].lifestyle,
+      bloodPressureSystolic: body.bloodPressureSystolic !== undefined ? body.bloodPressureSystolic : profiles[0].bloodPressureSystolic,
+      bloodPressureDiastolic: body.bloodPressureDiastolic !== undefined ? body.bloodPressureDiastolic : profiles[0].bloodPressureDiastolic,
       updatedAt: new Date(),
     })
     .where(eq(userProfileTable.id, profiles[0].id))

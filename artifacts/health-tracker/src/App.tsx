@@ -13,7 +13,7 @@ const MeasurementsPage = lazy(() => import("@/pages/measurements"));
 const RecommendationsPage = lazy(() => import("@/pages/recommendations"));
 const WeeklyPage       = lazy(() => import("@/pages/weekly"));
 const ProfilePage      = lazy(() => import("@/pages/profile"));
-const HistoryPage      = lazy(() => import("@/pages/history"));
+const CognitivePage    = lazy(() => import("@/pages/cognitive"));
 const NotFound         = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient({
@@ -23,7 +23,7 @@ const queryClient = new QueryClient({
 const PAGE_TITLES: Record<string, string> = {
   "/log": "Дневник", "/nutrients": "Нутриенты", "/labs": "Анализы",
   "/measurements": "Замеры", "/recommendations": "Рекомендации",
-  "/weekly": "Недельный отчёт", "/history": "История", "/profile": "Профиль",
+  "/weekly": "Недельный отчёт", "/cognitive": "Когниция и Витальность", "/profile": "Профиль",
 };
 
 function Spinner() {
@@ -62,7 +62,7 @@ function InnerRouter({ profile, onReset }: { profile: OnboardingData; onReset: (
           <Route path="/measurements"   component={MeasurementsPage} />
           <Route path="/recommendations" component={RecommendationsPage} />
           <Route path="/weekly"         component={WeeklyPage} />
-          <Route path="/history"        component={HistoryPage} />
+          <Route path="/cognitive"      component={CognitivePage} />
           <Route path="/profile"        component={ProfilePage} />
           <Route component={NotFound} />
         </Switch>

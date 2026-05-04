@@ -6,6 +6,7 @@ import labsRouter from "./labs";
 import measurementsRouter from "./measurements";
 import foodsRouter from "./foods";
 import analysisRouter from "./analysis";
+import supplementsRouter from "./supplements";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(labsRouter);
 router.use(measurementsRouter);
 router.use(foodsRouter);
 router.use(analysisRouter);
+router.use(supplementsRouter);
 
 export default router;

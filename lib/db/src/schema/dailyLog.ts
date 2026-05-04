@@ -13,6 +13,7 @@ export const dailyLogTable = pgTable("daily_log", {
     durationHours?: number;
     qualityScore?: number;
     wakeUps?: number;
+    daytimeSleepiness?: number;
     morningFeeling?: string;
     notes?: string;
   } | null>(),
@@ -22,6 +23,13 @@ export const dailyLogTable = pgTable("daily_log", {
     focusScore?: number;
     stressLevel?: number;
     hungerLevel?: number;
+    motivationScore?: number;
+    clarityScore?: number;
+    cravings?: string;
+    giState?: string;
+    muscleSoreness?: number;
+    skinState?: string;
+    swelling?: boolean;
     symptoms?: string[];
     notes?: string;
   } | null>(),

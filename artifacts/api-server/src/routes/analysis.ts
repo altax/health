@@ -7,6 +7,7 @@ import {
   labResultTable,
   bodyMeasurementTable,
   userProfileTable,
+  supplementEntryTable,
 } from "@workspace/db";
 import { eq, desc, gte, lte, and } from "drizzle-orm";
 
@@ -692,7 +693,15 @@ router.get("/dashboard", async (req, res) => {
       ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
       : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5;
     calorieTarget = Math.round(bmr * (palMap[profile.activityLevel] ?? 1.55));
-    waterTarget = Math.round(profile.weight * 35);
+    const actExtra = profile.activityLevel === "sedentary" ? 0
+      : profile.activityLevel === "lightly_active" ? 300
+      : profile.activityLevel === "moderately_active" ? 500
+      : profile.activityLevel === "very_active" ? 700 : 1000;
+    const lifestyle = (profile as any).lifestyle as any;
+    const sweatingExtra = lifestyle?.sweatingLevel === "high" ? 300
+      : lifestyle?.sweatingLevel === "very_high" ? 600 : 0;
+    const caffeineExtra = lifestyle?.caffeinePerDayMg ? Math.round(lifestyle.caffeinePerDayMg * 1.5) : 0;
+    waterTarget = Math.round(profile.weight * 35 + actExtra + sweatingExtra + caffeineExtra);
     proteinTarget = Math.round(profile.weight * 1.6);
   }
 
@@ -737,11 +746,308 @@ router.get("/dashboard", async (req, res) => {
     },
     calorieTarget,
     waterTarget,
+    waterRange: {
+      min: profile ? Math.round(profile.weight * 30) : 1500,
+      target: waterTarget,
+      upper: profile ? Math.round(profile.weight * 45) : 3500,
+    },
     proteinTarget,
     risks,
     strengths,
     latestMeasurement: latestMeasure ?? null,
     recentLabs: labs.slice(0, 5),
+  });
+});
+
+// ── /api/analysis/cognitive ─────────────────────────────────────────────────
+router.get("/analysis/cognitive", async (req, res) => {
+  const today = toDateStr(new Date());
+  const sevenDaysAgo = toDateStr(subDays(new Date(), 6));
+
+  const [profileArr, logs, activities, todayFoods] = await Promise.all([
+    db.select().from(userProfileTable).limit(1),
+    db.select().from(dailyLogTable).where(gte(dailyLogTable.date, sevenDaysAgo)).orderBy(desc(dailyLogTable.date)),
+    db.select().from(activityEntryTable).where(gte(activityEntryTable.date, sevenDaysAgo)),
+    db.select().from(foodEntryTable).where(eq(foodEntryTable.date, today)),
+  ]);
+
+  const profile = profileArr[0] ?? null;
+
+  // 1. SLEEP FACTOR
+  const sleepLogs = logs.filter((l) => (l.sleep as { durationHours?: number } | null)?.durationHours != null);
+  const avgSleep = sleepLogs.length > 0
+    ? sleepLogs.reduce((s, l) => s + ((l.sleep as { durationHours: number }).durationHours), 0) / sleepLogs.length
+    : null;
+  const avgSleepQuality = sleepLogs.filter((l) => (l.sleep as { qualityScore?: number } | null)?.qualityScore != null).length > 0
+    ? sleepLogs.reduce((s, l) => s + ((l.sleep as { qualityScore?: number }).qualityScore ?? 7), 0) / sleepLogs.length
+    : 7;
+
+  let sleepScore = 50;
+  if (avgSleep !== null) {
+    if (avgSleep >= 7 && avgSleep <= 9) sleepScore = Math.min(100, 72 + avgSleepQuality * 1.5);
+    else if (avgSleep >= 6 && avgSleep < 7) sleepScore = 55;
+    else if (avgSleep >= 9 && avgSleep < 10) sleepScore = 72;
+    else if (avgSleep < 6) sleepScore = 22;
+    else sleepScore = 45;
+    sleepScore = Math.min(100, Math.max(0, Math.round(sleepScore)));
+  }
+
+  // 2. NUTRITION FACTOR
+  const proteinTarget = profile ? Math.round(profile.weight * 1.6) : 120;
+  const calPalMap: Record<string, number> = { sedentary: 1.35, lightly_active: 1.55, moderately_active: 1.75, very_active: 1.9, extremely_active: 2.1 };
+  const calorieTarget = profile
+    ? Math.round((profile.sex === "female" ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161 : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) * (calPalMap[profile.activityLevel] ?? 1.55))
+    : 2000;
+
+  const todayNutrients = todayFoods.reduce((acc: Record<string, number>, f) => {
+    const n = f.nutrients as Record<string, number>;
+    for (const k of Object.keys(n)) acc[k] = (acc[k] ?? 0) + (n[k] ?? 0);
+    return acc;
+  }, {});
+
+  const proteinPct = todayNutrients.protein ? Math.min(100, (todayNutrients.protein / proteinTarget) * 100) : 0;
+  const calPct = todayNutrients.calories ? Math.min(100, (todayNutrients.calories / calorieTarget) * 100) : 0;
+  const nutritionScore = Math.round(proteinPct * 0.6 + calPct * 0.4);
+
+  // 3. HYDRATION FACTOR
+  const todayLog = logs.find((l) => l.date === today);
+  const waterTarget2 = profile ? Math.round(profile.weight * 35) : 2000;
+  const waterMl = todayLog?.waterMl ?? 0;
+  const hydrationScore = Math.round(Math.min(100, (waterMl / waterTarget2) * 100));
+
+  // 4. ACTIVITY FACTOR (WHO 150 min/week moderate = 100%)
+  const totalActivityMins = activities.reduce((s, a) => s + a.durationMinutes, 0);
+  const activityScore = Math.round(Math.min(100, (totalActivityMins / 150) * 100));
+
+  // 5. STRESS FACTOR (inverted: high stress = low score)
+  const wellbeingLogs = logs.filter((l) => (l.wellbeing as { stressLevel?: number } | null)?.stressLevel != null);
+  const avgStress = wellbeingLogs.length > 0
+    ? wellbeingLogs.reduce((s, l) => s + ((l.wellbeing as { stressLevel: number }).stressLevel), 0) / wellbeingLogs.length
+    : 5;
+  const stressScore = Math.round(Math.max(0, 100 - (avgStress - 1) * 12));
+
+  // 6. MICRONUTRIENTS FACTOR (cognitive key nutrients)
+  const isFemale = profile?.sex === "female";
+  const b12Pct = Math.min(100, todayNutrients.vitaminB12 ? (todayNutrients.vitaminB12 / 2.4) * 100 : 0);
+  const folatePct = Math.min(100, todayNutrients.folate ? (todayNutrients.folate / 400) * 100 : 0);
+  const ironPct = Math.min(100, todayNutrients.iron ? (todayNutrients.iron / (isFemale ? 18 : 8)) * 100 : 0);
+  const vitDPct = Math.min(100, todayNutrients.vitaminD ? (todayNutrients.vitaminD / 15) * 100 : 0);
+  const omega3Pct = Math.min(100, todayNutrients.omega3 ? (todayNutrients.omega3 / 2.0) * 100 : 0);
+  const microScore = Math.round((b12Pct + folatePct + ironPct + vitDPct + omega3Pct) / 5);
+
+  // Weighted composite score
+  const cognitiveScore = Math.round(
+    sleepScore * 0.30 + nutritionScore * 0.20 + hydrationScore * 0.15 +
+    activityScore * 0.15 + stressScore * 0.12 + microScore * 0.08
+  );
+
+  const grade = cognitiveScore >= 85 ? "A" : cognitiveScore >= 70 ? "B" : cognitiveScore >= 55 ? "C" : cognitiveScore >= 40 ? "D" : "F";
+  const gradeTexts: Record<string, string> = {
+    A: "Оптимальный когнитивный статус",
+    B: "Хорошее когнитивное состояние",
+    C: "Умеренный уровень — есть точки роста",
+    D: "Сниженный потенциал — нужна коррекция",
+    F: "Высокий риск когнитивной дисфункции",
+  };
+
+  const toImpact = (s: number) => s >= 70 ? "positive" : s >= 45 ? "neutral" : "negative";
+  const factors = [
+    { factor: "sleep", score: sleepScore, impact: toImpact(sleepScore) },
+    { factor: "nutrition", score: nutritionScore, impact: toImpact(nutritionScore) },
+    { factor: "hydration", score: hydrationScore, impact: toImpact(hydrationScore) },
+    { factor: "activity", score: activityScore, impact: toImpact(activityScore) },
+    { factor: "stress", score: stressScore, impact: toImpact(stressScore) },
+    { factor: "micronutrients", score: microScore, impact: toImpact(microScore) },
+  ];
+
+  const keyFindings: { text: string; type: "positive" | "negative" | "neutral"; source?: string }[] = [];
+  const recommendations: { text: string; priority: "high" | "medium" | "low"; source?: string }[] = [];
+
+  if (avgSleep !== null && avgSleep < 7) {
+    keyFindings.push({ text: `Средний сон ${avgSleep.toFixed(1)} ч за 7 дней ниже нормы (7–9 ч). Дефицит сна снижает рабочую память, скорость реакции и контроль импульсов.`, type: "negative", source: "Walker 2017; NSF 2023; PMID 28815557" });
+    recommendations.push({ text: "Ложитесь спать в одно и то же время ежедневно (± 30 мин). Регулярность ритма важнее суммарной длительности.", priority: "high", source: "PMID 36323210" });
+  } else if (avgSleep !== null && avgSleep >= 7) {
+    keyFindings.push({ text: `Средний сон ${avgSleep.toFixed(1)} ч — в норме. Надёжная база для когнитивной функции и консолидации памяти.`, type: "positive", source: "NSF 2023" });
+  }
+  if (nutritionScore < 50 && todayFoods.length > 0) {
+    keyFindings.push({ text: `Белок ${Math.round(todayNutrients.protein ?? 0)} г — ниже нормы (${proteinTarget} г). Дефицит снижает синтез нейромедиаторов.`, type: "negative", source: "PMID 29582648" });
+    recommendations.push({ text: `Добавьте ~${Math.round(proteinTarget - (todayNutrients.protein ?? 0))} г белка сегодня (яйца, рыба, творог, бобовые).`, priority: "high" });
+  }
+  if (hydrationScore < 60 && waterMl > 0) {
+    keyFindings.push({ text: `Гидратация ${Math.round(waterMl)} мл. Даже 1–2% дефицит воды ухудшает концентрацию и рабочую память.`, type: "negative", source: "Popkin 2010; PMID 21736786" });
+    recommendations.push({ text: `Выпейте ещё ${Math.round((waterTarget2 - waterMl) / 250)} стакана воды до вечера.`, priority: "medium" });
+  }
+  if (avgStress > 7) {
+    keyFindings.push({ text: `Высокий стресс (${avgStress.toFixed(1)}/10) — хронический стресс нарушает консолидацию памяти и исполнительные функции.`, type: "negative", source: "McEwen 2007; PMID 17869382" });
+    recommendations.push({ text: "10-минутная дыхательная практика или медитация снижает кортизол и улучшает когнитивную гибкость.", priority: "medium", source: "PMID 34765943" });
+  }
+  if (microScore < 40) {
+    recommendations.push({ text: "Рассмотрите добавки: B12 (500 мкг), витамин D3 (2000 МЕ), омега-3 (1–2 г EPA+DHA). Эти нутриенты критичны для нейропластичности.", priority: "medium", source: "IOM 2024; AHA 2023" });
+  }
+  if (activityScore < 50) {
+    recommendations.push({ text: "Аэробная активность 20–30 мин/день увеличивает BDNF (нейротрофический фактор мозга) и улучшает память.", priority: "low", source: "Ratey 2008; PMID 22655280" });
+  }
+
+  const trendData = [...logs].reverse().map((l) => ({
+    date: l.date,
+    energy: (l.wellbeing as { energyLevel?: number } | null)?.energyLevel ?? null,
+    focus: (l.wellbeing as { focusScore?: number } | null)?.focusScore ?? null,
+    mood: (l.wellbeing as { moodScore?: number } | null)?.moodScore ?? null,
+  }));
+
+  const dataQuality = Math.round(
+    (sleepLogs.length > 0 ? 30 : 0) + (todayFoods.length > 0 ? 30 : 0) +
+    (waterMl > 0 ? 20 : 0) + (wellbeingLogs.length > 0 ? 20 : 0)
+  );
+
+  return res.json({ cognitiveScore, grade, gradeText: gradeTexts[grade] ?? "Недостаточно данных", factors, keyFindings, recommendations, trendData, dataQuality });
+});
+
+// ── /api/analysis/daily-status ───────────────────────────────────────────────
+router.get("/analysis/daily-status", async (req, res) => {
+  const dateParam = req.query.date as string | undefined;
+  const date = dateParam ?? toDateStr(new Date());
+
+  const [profileArr, logRows, foods, suppRows, activityRows, labs] = await Promise.all([
+    db.select().from(userProfileTable).limit(1),
+    db.select().from(dailyLogTable).where(eq(dailyLogTable.date, date)).limit(1),
+    db.select().from(foodEntryTable).where(eq(foodEntryTable.date, date)),
+    db.select().from(supplementEntryTable).where(eq(supplementEntryTable.date, date)),
+    db.select().from(activityEntryTable).where(gte(activityEntryTable.date, toDateStr(subDays(new Date(), 6)))),
+    db.select().from(labResultTable).orderBy(desc(labResultTable.date)).limit(20),
+  ]);
+
+  const profile = profileArr[0] ?? null;
+  const todayLog = logRows[0] ?? null;
+  const isFemale = profile?.sex === "female";
+
+  const proteinTarget = profile ? Math.round(profile.weight * 1.6) : 120;
+  const waterTarget = profile ? Math.round(profile.weight * 35) : 2000;
+  const palMap: Record<string, number> = { sedentary: 1.35, lightly_active: 1.55, moderately_active: 1.75, very_active: 1.9, extremely_active: 2.1 };
+  const calorieTarget = profile
+    ? Math.round((isFemale ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161 : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) * (palMap[profile.activityLevel] ?? 1.55))
+    : 2000;
+
+  const foodNutrients = foods.reduce((acc: Record<string, number>, f) => {
+    const n = f.nutrients as Record<string, number>;
+    for (const k of Object.keys(n)) acc[k] = (acc[k] ?? 0) + (n[k] ?? 0);
+    return acc;
+  }, {});
+  const supplNutrients = suppRows.reduce((acc: Record<string, number>, s) => {
+    const n = s.nutrients as Record<string, number> | null ?? {};
+    for (const k of Object.keys(n)) acc[k] = (acc[k] ?? 0) + (n[k] ?? 0);
+    return acc;
+  }, {});
+  const totalNutrients: Record<string, number> = { ...foodNutrients };
+  for (const k of Object.keys(supplNutrients)) totalNutrients[k] = (totalNutrients[k] ?? 0) + supplNutrients[k];
+
+  const TARGETS: Record<string, { target: number; ul?: number; unit: string; label: string }> = {
+    calories:     { target: calorieTarget, unit: "ккал", label: "Калории" },
+    protein:      { target: proteinTarget, unit: "г", label: "Белок" },
+    fiber:        { target: 30, unit: "г", label: "Клетчатка" },
+    vitaminD:     { target: 15, unit: "мкг", label: "Витамин D" },
+    vitaminB12:   { target: 2.4, unit: "мкг", label: "B12" },
+    folate:       { target: 400, unit: "мкг", label: "Фолат" },
+    magnesium:    { target: isFemale ? 320 : 420, unit: "мг", label: "Магний" },
+    iron:         { target: isFemale ? 18 : 8, unit: "мг", label: "Железо" },
+    zinc:         { target: isFemale ? 8 : 11, unit: "мг", label: "Цинк" },
+    calcium:      { target: 1000, ul: 2500, unit: "мг", label: "Кальций" },
+    omega3:       { target: 2.0, unit: "г", label: "Омега-3" },
+    vitaminC:     { target: isFemale ? 75 : 90, unit: "мг", label: "Витамин C" },
+    sodium:       { target: 2300, ul: 2300, unit: "мг", label: "Натрий" },
+    sugar:        { target: 50, ul: 50, unit: "г", label: "Сахар" },
+    saturatedFat: { target: 22, ul: 22, unit: "г", label: "Насыщ. жиры" },
+  };
+
+  const missing: { nutrient: string; label: string; currentPct: number; current: number; target: number; unit: string }[] = [];
+  const excessive: { nutrient: string; label: string; currentPct: number; current: number; ul: number; unit: string }[] = [];
+
+  for (const [key, def] of Object.entries(TARGETS)) {
+    const current = totalNutrients[key] ?? 0;
+    if (current === 0) continue;
+    const pct = (current / def.target) * 100;
+    if (pct < 60) missing.push({ nutrient: key, label: def.label, currentPct: Math.round(pct), current: Math.round(current * 10) / 10, target: def.target, unit: def.unit });
+    if (def.ul && current > def.ul) excessive.push({ nutrient: key, label: def.label, currentPct: Math.round(pct), current: Math.round(current * 10) / 10, ul: def.ul, unit: def.unit });
+  }
+  missing.sort((a, b) => a.currentPct - b.currentPct);
+  excessive.sort((a, b) => b.currentPct - a.currentPct);
+
+  const top3Risks: { finding: string; importance: "critical" | "high" | "medium"; confidence: number; actionToday: string }[] = [];
+  const top3Strengths: { finding: string; evidence: string }[] = [];
+
+  const waterMl = todayLog?.waterMl ?? 0;
+  const waterPct = (waterMl / waterTarget) * 100;
+  const sleep = todayLog?.sleep as { durationHours?: number; qualityScore?: number } | null;
+  const protein = totalNutrients.protein ?? 0;
+  const calories = totalNutrients.calories ?? 0;
+
+  if (waterPct < 50 && waterMl > 0) {
+    top3Risks.push({ finding: `Гидратация ${Math.round(waterPct)}% нормы (${Math.round(waterMl)}/${waterTarget} мл)`, importance: "high", confidence: 90, actionToday: `Выпить ещё ${Math.round((waterTarget - waterMl) / 250)} стакана воды` });
+  } else if (waterPct >= 80) {
+    top3Strengths.push({ finding: `Гидратация ${Math.round(waterMl)} мл (${Math.round(waterPct)}% нормы)`, evidence: "EFSA 2023: ≥2 л/день снижает риск мочекаменной болезни" });
+  }
+
+  if (sleep?.durationHours && sleep.durationHours < 6) {
+    top3Risks.push({ finding: `Критически короткий сон: ${sleep.durationHours} ч (норма 7–9 ч)`, importance: "critical", confidence: 95, actionToday: "Лечь спать не позднее 22:30, исключить экраны за 1 ч до сна" });
+  } else if (sleep?.durationHours && sleep.durationHours >= 7) {
+    top3Strengths.push({ finding: `Сон ${sleep.durationHours} ч — в норме (7–9 ч)`, evidence: "NSF / ВОЗ 2023: 7–9 ч = оптимальный диапазон для взрослых" });
+  }
+
+  if (protein > 0 && protein < proteinTarget * 0.5) {
+    top3Risks.push({ finding: `Белок ${Math.round(protein)} г — менее 50% нормы (${proteinTarget} г)`, importance: "high", confidence: 88, actionToday: `Добавьте ~${Math.round(proteinTarget - protein)} г белка (яйца, творог, курица)` });
+  } else if (protein >= proteinTarget) {
+    top3Strengths.push({ finding: `Белок ${Math.round(protein)} г — норма достигнута`, evidence: "ISSN 2023: 1.6–2.2 г/кг для поддержания и роста мышц" });
+  }
+
+  if (calories >= calorieTarget * 0.85 && calories <= calorieTarget * 1.15) {
+    top3Strengths.push({ finding: `Калории ${Math.round(calories)} ккал — близко к целевому (${calorieTarget} ккал)`, evidence: "Mifflin-St Jeor + PAL; IOM DRI 2024" });
+  }
+
+  for (const lab of labs.slice(0, 3)) {
+    if ((lab.status === "critical_high" || lab.status === "critical_low") && top3Risks.length < 3) {
+      top3Risks.push({ finding: `Критическое отклонение: ${lab.marker} (${lab.value} ${lab.unit})`, importance: "critical", confidence: 98, actionToday: "Проконсультируйтесь с врачом о результате" });
+    }
+  }
+
+  const actionsToday: string[] = [];
+  if (waterPct < 80) actionsToday.push(`Вода: ещё ${Math.round((waterTarget - waterMl) / 250)} стакана (цель ${waterTarget} мл)`);
+  if (protein > 0 && protein < proteinTarget) actionsToday.push(`Белок: добавить ~${Math.round(proteinTarget - protein)} г`);
+  if (!sleep?.durationHours) actionsToday.push("Записать время сна и пробуждения в дневнике");
+  if (missing.length > 0) actionsToday.push(`Дефицитные нутриенты сегодня: ${missing.slice(0, 2).map((m) => m.label).join(", ")}`);
+  if (activityRows.length === 0) actionsToday.push("Добавить хотя бы 20 мин активности (прогулка считается)");
+
+  const toMeasureNext: string[] = [];
+  if (!sleep?.durationHours) toMeasureNext.push("Продолжительность и качество сна");
+  if (waterMl === 0) toMeasureNext.push("Потребление воды");
+  const oldestLab = labs[labs.length - 1];
+  if (!oldestLab || new Date(oldestLab.date) < subDays(new Date(), 90)) {
+    toMeasureNext.push("Анализы крови (3+ месяца без данных)");
+  }
+  toMeasureNext.push("Утреннее самочувствие и энергия");
+
+  const overallConfidence = Math.round(
+    (todayLog?.waterMl ? 15 : 0) + (sleep?.durationHours ? 20 : 0) +
+    (foods.length > 0 ? 25 : 0) + ((todayLog?.wellbeing as { energyLevel?: number } | null)?.energyLevel ? 15 : 0) +
+    (labs.length > 0 ? 15 : 0) + (suppRows.length > 0 ? 10 : 0)
+  );
+
+  const hasRisk = top3Risks.some((r) => r.importance === "critical");
+  const dayStatus = overallConfidence >= 60
+    ? (hasRisk ? "at_risk" : top3Risks.length === 0 ? "strong" : "moderate")
+    : "no_data";
+
+  const dayStatusTexts: Record<string, string> = {
+    strong: "Хороший день — ключевые показатели в норме",
+    moderate: "Умеренный день — есть точки для улучшения",
+    at_risk: "Требует внимания — обнаружены отклонения",
+    no_data: "Недостаточно данных — заполните дневник",
+  };
+
+  return res.json({
+    date, dayStatus, dayStatusText: dayStatusTexts[dayStatus], overallConfidence,
+    top3Risks: top3Risks.slice(0, 3), top3Strengths: top3Strengths.slice(0, 3),
+    nutritionGaps: missing.slice(0, 5), nutritionExcesses: excessive.slice(0, 3),
+    actionsToday: actionsToday.slice(0, 5), toMeasureNext: toMeasureNext.slice(0, 4),
   });
 });
 

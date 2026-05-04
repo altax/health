@@ -8,6 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+
+type Lifestyle = {
+  caffeinePerDayMg?: number;
+  alcoholUnitsPerWeek?: number;
+  smokingStatus?: string;
+  sweatingLevel?: string;
+  baselineStressLevel?: number;
+  mealFrequencyPerDay?: number;
+  lastMealTime?: string;
+  screenTimeHoursPerDay?: number;
+  trainingFrequencyPerWeek?: number;
+  trainingTypes?: string[];
+  wakeUpTime?: string;
+  bedTimeGoal?: string;
+};
 
 const GOAL_OPTIONS = [
   "Снижение веса", "Набор мышечной массы", "Больше энергии", "Улучшить сон",
@@ -89,6 +105,19 @@ export default function ProfilePage() {
     dietaryRestrictions: [],
   });
 
+  const [lifestyle, setLifestyle] = useState<Lifestyle>({
+    caffeinePerDayMg: 0,
+    alcoholUnitsPerWeek: 0,
+    smokingStatus: "never",
+    sweatingLevel: "moderate",
+    baselineStressLevel: 5,
+    mealFrequencyPerDay: 3,
+    screenTimeHoursPerDay: 6,
+    trainingFrequencyPerWeek: 3,
+    wakeUpTime: "07:00",
+    bedTimeGoal: "23:00",
+  });
+
   useEffect(() => {
     if (profile) {
       setForm({
@@ -110,6 +139,9 @@ export default function ProfilePage() {
         allergies: profile.allergies,
         dietaryRestrictions: profile.dietaryRestrictions,
       });
+      if ((profile as any).lifestyle) {
+        setLifestyle((prev) => ({ ...prev, ...(profile as any).lifestyle }));
+      }
     }
   }, [profile]);
 
@@ -117,8 +149,12 @@ export default function ProfilePage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function setLs<K extends keyof Lifestyle>(key: K, value: Lifestyle[K]) {
+    setLifestyle((prev) => ({ ...prev, [key]: value }));
+  }
+
   async function handleSave() {
-    await upsert.mutateAsync({ data: form });
+    await upsert.mutateAsync({ data: { ...form, lifestyle } as any });
     qc.invalidateQueries({ queryKey: getGetProfileQueryKey() });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -220,6 +256,110 @@ export default function ProfilePage() {
             onChange={(v) => set("goals", v)}
             placeholder="Введите цель и нажмите Enter"
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Контекст образа жизни</CardTitle>
+          <CardDescription>Эти данные влияют на расчёт нормы воды, нутриентов и рекомендации</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Кофеин в день (мг)</label>
+              <Input type="number" min={0} max={1000} step={50} placeholder="0"
+                value={lifestyle.caffeinePerDayMg ?? ""}
+                onChange={(e) => setLs("caffeinePerDayMg", e.target.value ? Number(e.target.value) : undefined)} />
+              <div className="text-xs text-muted-foreground">1 чашка кофе ≈ 80–100 мг</div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Алкоголь (порций/неделю)</label>
+              <Input type="number" min={0} max={50} step={1} placeholder="0"
+                value={lifestyle.alcoholUnitsPerWeek ?? ""}
+                onChange={(e) => setLs("alcoholUnitsPerWeek", e.target.value ? Number(e.target.value) : undefined)} />
+              <div className="text-xs text-muted-foreground">1 порция = 150 мл вина или 330 мл пива</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Курение</label>
+              <Select value={lifestyle.smokingStatus ?? "never"} onValueChange={(v) => setLs("smokingStatus", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="never">Никогда</SelectItem>
+                  <SelectItem value="former">Бросил(а)</SelectItem>
+                  <SelectItem value="occasional">Иногда</SelectItem>
+                  <SelectItem value="regular">Регулярно</SelectItem>
+                  <SelectItem value="heavy">Сильно (>20/день)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Потоотделение</label>
+              <Select value={lifestyle.sweatingLevel ?? "moderate"} onValueChange={(v) => setLs("sweatingLevel", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Слабое</SelectItem>
+                  <SelectItem value="moderate">Умеренное</SelectItem>
+                  <SelectItem value="high">Сильное</SelectItem>
+                  <SelectItem value="very_high">Очень сильное</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Базовый уровень стресса</span>
+              <span className="font-mono font-medium">{lifestyle.baselineStressLevel ?? 5}/10</span>
+            </div>
+            <Slider value={[lifestyle.baselineStressLevel ?? 5]} min={1} max={10} step={1}
+              onValueChange={([v]) => setLs("baselineStressLevel", v)} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Приёмов пищи в день</label>
+              <Input type="number" min={1} max={10} placeholder="3"
+                value={lifestyle.mealFrequencyPerDay ?? ""}
+                onChange={(e) => setLs("mealFrequencyPerDay", e.target.value ? Number(e.target.value) : undefined)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Экран (часов в день)</label>
+              <Input type="number" min={0} max={24} step={0.5} placeholder="6"
+                value={lifestyle.screenTimeHoursPerDay ?? ""}
+                onChange={(e) => setLs("screenTimeHoursPerDay", e.target.value ? Number(e.target.value) : undefined)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Тренировок в неделю</label>
+              <Input type="number" min={0} max={14} placeholder="3"
+                value={lifestyle.trainingFrequencyPerWeek ?? ""}
+                onChange={(e) => setLs("trainingFrequencyPerWeek", e.target.value ? Number(e.target.value) : undefined)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Последний приём пищи</label>
+              <Input type="time" value={lifestyle.lastMealTime ?? ""}
+                onChange={(e) => setLs("lastMealTime", e.target.value || undefined)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Целевое пробуждение</label>
+              <Input type="time" value={lifestyle.wakeUpTime ?? ""}
+                onChange={(e) => setLs("wakeUpTime", e.target.value || undefined)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Целевое время сна</label>
+              <Input type="time" value={lifestyle.bedTimeGoal ?? ""}
+                onChange={(e) => setLs("bedTimeGoal", e.target.value || undefined)} />
+            </div>
+          </div>
         </CardContent>
       </Card>
 

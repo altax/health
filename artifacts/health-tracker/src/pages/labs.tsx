@@ -31,9 +31,18 @@ const COMMON_MARKERS = [
   { value: "ast", label: "АСТ" },
   { value: "crp", label: "СРБ (CRP)" },
   { value: "uric_acid", label: "Мочевая кислота" },
+  { value: "transferrin", label: "Трансферрин" },
+  { value: "transferrin_saturation", label: "Насыщение трансферрина (TSAT)" },
+  { value: "egfr", label: "СКФ (eGFR)" },
   { value: "sodium", label: "Натрий" },
   { value: "potassium", label: "Калий" },
   { value: "magnesium", label: "Магний" },
+  { value: "zinc", label: "Цинк" },
+  { value: "copper", label: "Медь" },
+  { value: "homocysteine", label: "Гомоцистеин" },
+  { value: "cortisol_morning", label: "Кортизол (утренний)" },
+  { value: "insulin_fasting", label: "Инсулин натощак" },
+  { value: "free_t3", label: "Свободный T3" },
 ];
 
 const STATUS_STYLE: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle2; label: string }> = {
