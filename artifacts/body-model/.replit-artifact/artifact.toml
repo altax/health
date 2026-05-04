@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "3D Body Model"
+version = "1.0.0"
+id = "artifacts/body-model"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23361
+
+[services.development]
+run = "pnpm --filter @workspace/body-model run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/body-model", "run", "build" ]
+publicDir = "artifacts/body-model/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23361"
+BASE_PATH = "/"
